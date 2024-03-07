@@ -67,14 +67,23 @@ public class BlackjackTest {
         hand.add(new Card("Hearts", 5));
         assertEquals(5, logicObj.handTotal(hand));
 
-        int total = 5, val;
-        for (int i = 0; i < 10; i++){
-            val = (int)(Math.random() % 13) + 1;
-            hand.add(new Card("Hearts", val));
-            total += Math.min(val, 10);
+        hand.add(new Card("Hearts", 5));
+        assertEquals(10, logicObj.handTotal(hand));
 
-            assertEquals(total, logicObj.handTotal(hand));
-        }
+        hand.add(new Card("Hearts", 1));
+        assertEquals(21, logicObj.handTotal(hand));
+
+        hand = new ArrayList<>();
+
+        hand.add(new Card("Hearts", 13));
+        hand.add(new Card("Hearts", 1));
+        assertEquals(21, logicObj.handTotal(hand));
+
+        hand = new ArrayList<>();
+        hand.add(new Card("Hearts", 11));
+        hand.add(new Card("Hearts", 12));
+        hand.add(new Card("Hearts", 13));
+        assertEquals(30, logicObj.handTotal(hand));
 
     }
 
@@ -176,6 +185,66 @@ public class BlackjackTest {
         dealer.shuffleDeck();
         assertEquals(52, dealer.deckSize());
 
+    }
+
+    @Test
+    public void test_evaluateWinnings(){
+
+        BlackjackGame game = new BlackjackGame();
+        game.currentBet = 100.0;
+        game.playerHand = new ArrayList<>();
+        game.bankerHand = new ArrayList<>();
+
+        game.playerHand.add(new Card("Clubs", 10));
+        game.bankerHand.add(new Card("Clubs", 10));
+
+        assertEquals(0.0, game.evaluateWinnings()); // both sides tied when < 21
+
+        game.playerHand.add(new Card("Clubs", 2));
+
+        assertEquals(100.0, game.evaluateWinnings()); // when the player has a higher hand
+
+        game.bankerHand.add(new Card("Clubs", 3));
+        assertEquals(-100.0, game.evaluateWinnings()); // when the dealer has a higher hand
+
+        game.playerHand.add(new Card("Clubs", 9));
+        assertEquals(100.0, game.evaluateWinnings()); // when the player hits blackjack
+
+        game.bankerHand.add(new Card("Clubs", 8));
+        assertEquals(0, game.evaluateWinnings()); // when both sides hits blackjacks
+
+        game.playerHand = new ArrayList<>();
+        game.bankerHand = new ArrayList<>();
+
+
+        game.playerHand.add(new Card("Spades", 1));
+        game.playerHand.add(new Card("Spades", 11));
+        game.bankerHand.add(new Card("Spades", 5));
+
+        assertEquals(150.0, game.evaluateWinnings()); // when the player hits blackjack with Ace and a 10
+
+        game.playerHand = new ArrayList<>();
+        game.playerHand.add(new Card("Spades", 10));
+        game.playerHand.add(new Card("Spades", 12));
+        game.playerHand.add(new Card("Spades", 11));
+
+        assertEquals(-100.0, game.evaluateWinnings()); // when the player busts
+
+        game.playerHand = new ArrayList<>();
+        game.playerHand.add(new Card("Spades", 10));
+        game.playerHand.add(new Card("Spades", 12));
+        game.bankerHand.add(new Card("Spades", 10));
+        game.bankerHand.add(new Card("Spades", 10));
+
+        assertEquals(100.0, game.evaluateWinnings()); //when the dealer busts
+
+        game.playerHand.add(new Card("Spades", 4));
+
+        assertEquals(-100.0, game.evaluateWinnings()); // when both sides busts
+
+        game.currentBet = 1000.0;
+
+        assertEquals(-1000.0, game.evaluateWinnings()); // when the bet amount changes
     }
 
 
