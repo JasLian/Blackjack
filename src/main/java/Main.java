@@ -1,14 +1,35 @@
-public class Main {
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+public class Main extends Application{
+
+    Scene startScene, setupScene, rulesScene, gameScene, endScene, loseScene;
+
+    BlackjackGame game = new BlackjackGame();
+
 
     public static void main(String[] args){
+        launch(args);
+    }
 
-        BlackjackDealer dealer = new BlackjackDealer();
-        dealer.generateDeck();
+    @Override
+    public void start(Stage mainStage) throws Exception {
 
-        System.out.println("The deck is: ");
-
-//        for (Card card : dealer.deck){
-//            System.out.println(card.suit + " " + card.value);
-//        }
     }
 }
