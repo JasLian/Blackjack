@@ -22,7 +22,14 @@ public class BlackjackGameLogic {
             return "dealer";
 
         }
-        else if (playerVal == 21){ return "player"; }
+        else if (playerVal == 21){
+
+            if (dealerVal == 21){
+                return "push";
+            }
+
+            return "player";
+        }
 
         return "dealer";
 
