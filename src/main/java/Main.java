@@ -7,8 +7,8 @@ public class Main {
 
         System.out.println("The deck is: ");
 
-        for (Card card : dealer.deck){
-            System.out.println(card.suit + " " + card.value);
-        }
+//        for (Card card : dealer.deck){
+//            System.out.println(card.suit + " " + card.value);
+//        }
     }
 }

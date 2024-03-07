@@ -6,7 +6,7 @@ public class BlackjackDealer {
 
     private final String[] suits = {"Hearts", "Diamonds", "Spades", "Clubs"};
 
-    public LinkedList<Card> deck;
+    private LinkedList<Card> deck;
 
     public void generateDeck(){
 

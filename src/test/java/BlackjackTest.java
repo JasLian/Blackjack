@@ -90,7 +90,6 @@ public class BlackjackTest {
 
         dealer.add(new Card("Diamonds", 1));
         assertFalse(logicObj.evaluateBankerDraw(dealer));
-
         dealer.add(new Card("Diamonds", 5));
         assertFalse(logicObj.evaluateBankerDraw(dealer));
 
