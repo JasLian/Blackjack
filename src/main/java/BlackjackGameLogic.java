@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class BlackjackGameLogic {
 
@@ -30,9 +31,28 @@ public class BlackjackGameLogic {
     public int handTotal(ArrayList<Card> hand){
 
         int total = 0;
+        LinkedList<Card> aces = new LinkedList<>();
 
         for (Card c : hand) {
+
+            if (c.value == 1){
+                aces.add(c);
+                continue;
+            }
+
             total += Math.min(c.value, 10);
+        }
+
+        while (!aces.isEmpty()){
+
+            if (total + 11 <= 21){
+                total += 11;
+            }
+            else{
+                total += 1;
+            }
+
+            aces.remove();
         }
 
         return total;
