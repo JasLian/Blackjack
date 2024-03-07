@@ -117,8 +117,6 @@ public class BlackjackTest {
             faceCount.put(i, 0);
         }
 
-        Map<String, Integer> generatedSuitCount = new HashMap<>();
-        Map<String, Integer> generateFaceCount = new HashMap<>();
         while (dealer.deckSize() != 0){
 
             Card drewCard = dealer.drawOne();
