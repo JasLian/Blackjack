@@ -2,11 +2,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BlackjackTest {
 
     @Test
-    public void testCardClass(){
+    public void test_CardClass(){
 
         Card newCard = new Card("Diamond", 6);
 
@@ -55,7 +57,7 @@ public class BlackjackTest {
     }
 
     @Test
-    public void testHandTotal(){
+    public void test_HandTotal(){
 
         ArrayList<Card> hand = new ArrayList<>();
         BlackjackGameLogic logicObj = new BlackjackGameLogic();
@@ -67,9 +69,9 @@ public class BlackjackTest {
 
         int total = 5, val;
         for (int i = 0; i < 10; i++){
-            val = (int)(Math.random() % 10) + 1;
+            val = (int)(Math.random() % 13) + 1;
             hand.add(new Card("Hearts", val));
-            total += val;
+            total += Math.min(val, 10);
 
             assertEquals(total, logicObj.handTotal(hand));
         }
@@ -92,6 +94,89 @@ public class BlackjackTest {
         assertFalse(logicObj.evaluateBankerDraw(dealer));
         dealer.add(new Card("Diamonds", 5));
         assertFalse(logicObj.evaluateBankerDraw(dealer));
+
+    }
+
+    @Test
+    public void test_generateDeck(){
+
+        BlackjackDealer dealer = new BlackjackDealer();
+
+        dealer.generateDeck();
+
+        assertEquals(52, dealer.deckSize());
+
+        Map<String, Integer> suitCount = new HashMap<>();
+        suitCount.put("Diamonds", 0);
+        suitCount.put("Clubs", 0);
+        suitCount.put("Hearts", 0);
+        suitCount.put("Spades", 0);
+
+        Map<Integer, Integer> faceCount = new HashMap<>();
+        for (int i = 1; i <= 13; i++){
+            faceCount.put(i, 0);
+        }
+
+        Map<String, Integer> generatedSuitCount = new HashMap<>();
+        Map<String, Integer> generateFaceCount = new HashMap<>();
+        while (dealer.deckSize() != 0){
+
+            Card drewCard = dealer.drawOne();
+
+            suitCount.replace(drewCard.suit, suitCount.get(drewCard.suit) + 1);
+            faceCount.replace(drewCard.value, faceCount.get(drewCard.value) + 1);
+
+        }
+
+        assertEquals(0, dealer.deckSize());
+
+        assertEquals(13, suitCount.get("Diamonds"));
+        assertEquals(13, suitCount.get("Clubs"));
+        assertEquals(13, suitCount.get("Hearts"));
+        assertEquals(13, suitCount.get("Spades"));
+
+        for (int i = 1; i <= 13; i++){
+            assertEquals(4, faceCount.get(i));
+        }
+
+    }
+
+    @Test
+    public void test_dealHand(){
+
+        BlackjackDealer dealer = new BlackjackDealer();
+        dealer.generateDeck();
+        ArrayList<Card> hand = dealer.dealHand();
+
+        assertEquals(2, hand.size());
+        assertEquals(50, dealer.deckSize());
+
+        Card first = hand.get(0), second = hand.get(1);
+
+        if (first.value == second.value){
+            assertNotEquals(first.suit, second.suit);
+        }
+        else if (first.suit.equals(second.suit)){
+            assertNotEquals(first.value, second.value);
+        }
+
+    }
+
+    @Test
+    public void test_shuffleDeck(){
+
+        BlackjackDealer dealer = new BlackjackDealer();
+
+        dealer.generateDeck();
+
+        for (int i = 0; i < 10; i++){
+            dealer.drawOne();
+        }
+
+        assertEquals(42, dealer.deckSize());
+
+        dealer.shuffleDeck();
+        assertEquals(52, dealer.deckSize());
 
     }
 
