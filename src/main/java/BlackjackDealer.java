@@ -12,18 +12,11 @@ public class BlackjackDealer {
 
         deck = new LinkedList<>();
 
-        for (int i = 1; i <= 10; i++){
+        for (int i = 1; i <= 13; i++){
             deck.add(new Card(suits[0], i));
             deck.add(new Card(suits[1], i));
             deck.add(new Card(suits[2], i));
             deck.add(new Card(suits[3], i));
-        }
-
-        for (int i = 0; i < 3; i++){
-            deck.add(new Card(suits[0], 10));
-            deck.add(new Card(suits[1], 10));
-            deck.add(new Card(suits[2], 10));
-            deck.add(new Card(suits[3], 10));
         }
 
         Collections.shuffle(deck);
