@@ -32,7 +32,7 @@ public class BlackjackGameLogic {
         int total = 0;
 
         for (Card c : hand) {
-            total += c.value;
+            total += Math.min(c.value, 10);
         }
 
         return total;
