@@ -21,8 +21,7 @@ public class Main extends Application{
 
     Scene startScene, setupScene, rulesScene, gameScene, endScene, loseScene;
 
-    BlackjackGame game = new BlackjackGame();
-
+    BlackjackGame game;
 
     public static void main(String[] args){
         launch(args);
@@ -30,6 +29,10 @@ public class Main extends Application{
 
     @Override
     public void start(Stage mainStage) throws Exception {
+        game = new BlackjackGame();
+
+        BorderPane pane = new BorderPane();
+
 
     }
 }
