@@ -35,7 +35,6 @@ public class BlackjackTest {
         dealer.add(new Card("Hearts", 4));
         assertEquals("player", logicObj.whoWon(player, dealer));
 
-        dealer = null;
         dealer = new ArrayList<>();
         dealer.add(new Card("Diamonds", 4));
 
@@ -54,4 +53,47 @@ public class BlackjackTest {
         assertEquals("dealer", logicObj.whoWon(player, dealer));
 
     }
+
+    @Test
+    public void testHandTotal(){
+
+        ArrayList<Card> hand = new ArrayList<>();
+        BlackjackGameLogic logicObj = new BlackjackGameLogic();
+
+        assertEquals(0, logicObj.handTotal(hand));
+
+        hand.add(new Card("Hearts", 5));
+        assertEquals(5, logicObj.handTotal(hand));
+
+        int total = 5, val;
+        for (int i = 0; i < 10; i++){
+            val = (int)(Math.random() % 10) + 1;
+            hand.add(new Card("Hearts", val));
+            total += val;
+
+            assertEquals(total, logicObj.handTotal(hand));
+        }
+
+    }
+
+    @Test
+    public void test_evaluateBankerDraw(){
+        ArrayList<Card> dealer = new ArrayList<>();
+        BlackjackGameLogic logicObj = new BlackjackGameLogic();
+
+        assertTrue(logicObj.evaluateBankerDraw(dealer));
+
+        dealer.add(new Card("Diamonds", 10));
+        assertTrue(logicObj.evaluateBankerDraw(dealer));
+        dealer.add(new Card("Diamonds", 6));
+        assertTrue(logicObj.evaluateBankerDraw(dealer));
+
+        dealer.add(new Card("Diamonds", 1));
+        assertFalse(logicObj.evaluateBankerDraw(dealer));
+        dealer.add(new Card("Diamonds", 5));
+        assertFalse(logicObj.evaluateBankerDraw(dealer));
+
+    }
+
+
 }
