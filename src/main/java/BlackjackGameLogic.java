@@ -52,14 +52,15 @@ public class BlackjackGameLogic {
 
         while (!aces.isEmpty()){
 
-            if (total + 11 <= 21){
+            aces.remove();
+
+            if (total + 11 <= 21 - aces.size()){
                 total += 11;
             }
             else{
                 total += 1;
             }
 
-            aces.remove();
         }
 
         return total;
