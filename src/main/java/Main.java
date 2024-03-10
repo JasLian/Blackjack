@@ -1,31 +1,25 @@
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.util.HashMap;
 
 public class Main extends Application{
 
     BlackjackGame game;
+
     Button startBtn, rulesBtn;
+    Text errorMsg;
+    TextField balanceInput, betInput;
     BackgroundFill bgFill = new BackgroundFill(Color.rgb(20, 174, 92), null, null);
     BackgroundFill btnFill = new BackgroundFill(Color.rgb(69, 194, 128), new CornerRadii(20), null);
     Background btnBg = new Background(btnFill);
@@ -34,9 +28,11 @@ public class Main extends Application{
     Border btnBorder = new Border(btnStroke);
     Background bg = new Background(bgFill);
 
-    EventHandler<ActionEvent> returnToHome, startRound;
+    EventHandler<ActionEvent> returnToHome, startRound1;
 
     HashMap<String, Scene> sceneMap = new HashMap<>();
+
+    double playerBalance;
 
     public static void main(String[] args){
         launch(args);
@@ -48,27 +44,42 @@ public class Main extends Application{
         game = new BlackjackGame();
 
         sceneMap.put("start", createStartScene());
+        sceneMap.put("setup", createSetupScene());
 
-        // need code for startBtn
+        startBtn.setOnAction(e ->{
+            mainStage.setScene(createSetupScene());
+        });
 
         rulesBtn.setOnAction(e -> {
-                mainStage.setScene(sceneMap.get("rules"));
+            mainStage.setScene(sceneMap.get("rules"));
         });
+
+        startRound1 = e->{
+            try{
+                double balance = Double.parseDouble(balanceInput.getText());
+                playerBalance = balance;
+
+                double bet = Double.parseDouble(betInput.getText());
+                game.currentBet = bet;
+
+                mainStage.setScene(sceneMap.get("start"));
+            }
+            catch (NumberFormatException ignored){
+                errorMsg.setText("eror");
+            }
+
+        };
 
         returnToHome = e -> {
             mainStage.setScene(sceneMap.get("start"));
         };
 
-        startRound = e->{
-            mainStage.setScene(createPlayScene());
-        };
 
         sceneMap.put("rules", createRulesScene());
 
         mainStage.setTitle("Blackjack");
 
-//        mainStage.setScene(sceneMap.get("start"));
-        mainStage.setScene(createSetupScene());
+        mainStage.setScene(sceneMap.get("start"));
         mainStage.show();
 
     }
@@ -105,7 +116,6 @@ public class Main extends Application{
 
     }
 
-
     private Scene createRulesScene(){
 
         Text ruleTitle = new Text("How to Play");
@@ -113,22 +123,22 @@ public class Main extends Application{
 
         Text ruleText = new Text("• Objective: Beat the dealer's hand without going over 21.\n\n" +
                                     "• Dealing: Both the player and dealer are dealt two cards. The player will only know one of the dealer’s card\n\n" +
-                                    "• Card Values: Number cards are worth their face value, face cards are worth 10, and Aces can be worth 1 or 11,\ndepending on what is most helpful to the player\n\n"+
+                                    "• Card Values: Number cards are worth their face value, face cards are worth 10, and Aces can be worth 1 or 11,depending on what is most helpful to the player\n\n"+
                                     "• Player's Turn: Players can choose to hit (take another card) or stand (keep their current hand).\n\n" +
-                                    "• Dealer's Turn: The dealer reveals their face-down card after the player have finished their turn.\nThey must hit until they reach 17 or higher. On hands 17 or higher, the dealer will stay\n\n" +
+                                    "• Dealer's Turn: The dealer reveals their face-down card after the player have finished their turn. They must hit until they reach 17 or higher. On hands 17 or higher, the dealer will stay\n\n" +
                                     "• Players win if their hand is closer to 21 than the dealer's without going over. If the player or dealer busts (exceeds 21), they lose\n\n" +
                                     "• If both sides have the same value hand, it is a draw and the round is over without any money changing hands.\n\n");
         ruleText.setStyle("-fx-font-size: 25;");
-        ruleText.setWrappingWidth(800);
+        ruleText.setWrappingWidth(900);
 
-        Button returnBtn = new Button("Return");
-        returnBtn.setOnAction(returnToHome);
-        returnBtn.setMinSize(200, 50);
-        returnBtn.setBackground(btnBg);
-        returnBtn.setBorder(btnBorder);
-        returnBtn.setStyle("-fx-font-size: 20;");
+        Button rulesReturn = new Button("Return");
+        rulesReturn.setOnAction(returnToHome);
+        rulesReturn.setMinSize(200, 50);
+        rulesReturn.setBackground(btnBg);
+        rulesReturn.setBorder(btnBorder);
+        rulesReturn.setStyle("-fx-font-size: 20;");
 
-        VBox box = new VBox(50, ruleTitle, ruleText, returnBtn);
+        VBox box = new VBox(50, ruleTitle, ruleText, rulesReturn);
         box.maxWidth(50);
 
         BorderPane pane = new BorderPane();
@@ -147,13 +157,28 @@ public class Main extends Application{
 
         Text balanceText = new Text("Set Your Starting Amount");
         Text betText = new Text("Set Your Starting Bet");
+        errorMsg = new Text();
 
-        TextField balanceInput = new TextField("Enter a starting amount");
-        TextField betInput = new TextField("Enter a bet");
+        balanceInput = new TextField("Enter a starting amount");
+        betInput = new TextField("Enter a bet");
+
+        Button startRoundBtn = new Button("Start Game");
+        startRoundBtn.setOnAction(startRound1);
+        startRoundBtn.setMinSize(200, 50);
+        startRoundBtn.setBackground(btnBg);
+        startRoundBtn.setBorder(btnBorder);
+        startRoundBtn.setStyle("-fx-font-size: 20;");
+
+        Button setUpReturn = new Button("Return");
+        setUpReturn.setOnAction(returnToHome);
+        setUpReturn.setMinSize(200, 50);
+        setUpReturn.setBackground(btnBg);
+        setUpReturn.setBorder(btnBorder);
+        setUpReturn.setStyle("-fx-font-size: 20;");
 
         VBox v1 = new VBox(20, balanceText, balanceInput);
         VBox v2 = new VBox(20, betText, betInput);
-        VBox v3 = new VBox(50, v1, v2);
+        VBox v3 = new VBox(50, v1, v2, startRoundBtn, setUpReturn, errorMsg);
         v1.setAlignment(Pos.valueOf("CENTER"));
         v2.setAlignment(Pos.valueOf("CENTER"));
         v3.setAlignment(Pos.valueOf("CENTER"));
@@ -194,7 +219,16 @@ public class Main extends Application{
     }
 
     private Scene createPlayScene(){
-        return null;
+
+        VBox upperRail = new VBox();
+        VBox lowerRail = new VBox();
+
+        BackgroundFill tableRailFill = new BackgroundFill(Color.BROWN, null, null);
+        Background tableRailBg = new Background(tableRailFill);
+        upperRail.setBackground(tableRailBg);
+
+
+        return new Scene(upperRail, 1500, 1200);
     }
 
 }
