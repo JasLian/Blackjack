@@ -17,7 +17,9 @@ public class Main extends Application{
 
     BlackjackGame game;
 
-    Button startBtn, rulesBtn;
+    HBox dealerSide, playerSide;
+
+    Button startBtn, rulesBtn, startRoundBtn, hitBtn, stayBtn;
     Text errorMsg;
     TextField balanceInput, betInput;
     BackgroundFill bgFill = new BackgroundFill(Color.rgb(20, 174, 92), null, null);
@@ -43,43 +45,47 @@ public class Main extends Application{
 
         game = new BlackjackGame();
 
+        returnToHome = e -> {
+            mainStage.setScene(sceneMap.get("start"));
+        };
+
         sceneMap.put("start", createStartScene());
         sceneMap.put("setup", createSetupScene());
+        sceneMap.put("rules", createRulesScene());
 
         startBtn.setOnAction(e ->{
-            mainStage.setScene(createSetupScene());
+            mainStage.setScene(sceneMap.get("setup"));
         });
 
         rulesBtn.setOnAction(e -> {
             mainStage.setScene(sceneMap.get("rules"));
         });
 
-        startRound1 = e->{
+        startRoundBtn.setOnAction(e->{
             try{
-                double balance = Double.parseDouble(balanceInput.getText());
-                playerBalance = balance;
+                playerBalance = Double.parseDouble(balanceInput.getText());
 
-                double bet = Double.parseDouble(betInput.getText());
-                game.currentBet = bet;
+                game.currentBet = Double.parseDouble(betInput.getText());
 
-                mainStage.setScene(sceneMap.get("start"));
+                balanceInput.setText("Enter a starting balance");
+                betInput.setText("Enter a bet");
+
+                playerBalance -= game.currentBet;
+
+                mainStage.setScene(createPlayScene());
+
             }
             catch (NumberFormatException ignored){
-                errorMsg.setText("eror");
+                errorMsg.setText("Invalid value entered for balance and/or bet. Please try again.");
             }
 
-        };
-
-        returnToHome = e -> {
-            mainStage.setScene(sceneMap.get("start"));
-        };
-
-
-        sceneMap.put("rules", createRulesScene());
+        });
 
         mainStage.setTitle("Blackjack");
 
-        mainStage.setScene(sceneMap.get("start"));
+//        mainStage.setScene(sceneMap.get("start"));
+        mainStage.setScene(createPlayScene());
+//        mainStage.setResizable(false);
         mainStage.show();
 
     }
@@ -158,11 +164,12 @@ public class Main extends Application{
         Text balanceText = new Text("Set Your Starting Amount");
         Text betText = new Text("Set Your Starting Bet");
         errorMsg = new Text();
+        errorMsg.setStyle("-fx-font-size: 20");
 
-        balanceInput = new TextField("Enter a starting amount");
+        balanceInput = new TextField("Enter a starting balance");
         betInput = new TextField("Enter a bet");
 
-        Button startRoundBtn = new Button("Start Game");
+        startRoundBtn = new Button("Start Game");
         startRoundBtn.setOnAction(startRound1);
         startRoundBtn.setMinSize(200, 50);
         startRoundBtn.setBackground(btnBg);
@@ -220,15 +227,53 @@ public class Main extends Application{
 
     private Scene createPlayScene(){
 
-        VBox upperRail = new VBox();
-        VBox lowerRail = new VBox();
+        HBox upperRail = new HBox();
+        upperRail.setMinHeight(100);
+        upperRail.setMaxHeight(100);
 
-        BackgroundFill tableRailFill = new BackgroundFill(Color.BROWN, null, null);
+        hitBtn = new Button("Hit");
+        stayBtn = new Button("Stay");
+
+        HBox buttonBox = new HBox(150, hitBtn, stayBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        Text balanceAndBet = new Text("Balance: $" + playerBalance + "\n" +
+                                "Bet: $" + game.currentBet);
+        balanceAndBet.setFill(Color.WHITE);
+        balanceAndBet.setStyle("-fx-font-size: 25");
+
+        HBox lowerUI = new HBox(500, balanceAndBet, buttonBox);
+        lowerUI.setAlignment(Pos.CENTER);
+        HBox lowerRail = new HBox(lowerUI);
+        lowerRail.setMinHeight(100);
+        lowerRail.setMaxHeight(100);
+
+        dealerSide = new HBox(new Button("test"));
+        playerSide = new HBox(new Button("test"));
+
+        dealerSide.setAlignment(Pos.CENTER);
+        playerSide.setAlignment(Pos.CENTER);
+
+        VBox table = new VBox(700, dealerSide, playerSide);
+
+        BorderPane centerPane = new BorderPane();
+        centerPane.setCenter(table);
+        centerPane.setPadding(new Insets(100, 0, 0, 0));
+
+        BackgroundFill tableRailFill = new BackgroundFill(Color.rgb(125,73, 35), null, null);
         Background tableRailBg = new Background(tableRailFill);
         upperRail.setBackground(tableRailBg);
+        lowerRail.setBackground(tableRailBg);
 
+        BorderPane pane = new BorderPane();
+        pane.setTop(upperRail);
+        pane.setCenter(centerPane);
+        pane.setBottom(lowerRail);
 
-        return new Scene(upperRail, 1500, 1200);
+        pane.setBackground(bg);
+        pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 20;");
+
+        return new Scene(pane, 1500, 1200);
     }
 
 }
