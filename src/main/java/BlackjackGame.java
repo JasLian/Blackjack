@@ -37,7 +37,6 @@ public class BlackjackGame {
             winnings = -1 * currentBet;
         }
 
-        totalWinnings += winnings;
         return winnings;
     }
 
