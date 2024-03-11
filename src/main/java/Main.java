@@ -1,3 +1,4 @@
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -6,22 +7,26 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Main extends Application{
 
-    BlackjackGame game;
+    private BlackjackGame game;
 
     HBox dealerSide, playerSide;
 
-    Button startBtn, rulesBtn, startRoundBtn, hitBtn, stayBtn;
-    Text errorMsg;
-    TextField balanceInput, betInput;
+    Button startBtn, rulesBtn, startRoundBtn1, startRoundBtn2, hitBtn, stayBtn;
+    Text errorMsg, balanceAndBet;
+    TextField balanceInput, betInput, newBetInput;
     BackgroundFill bgFill = new BackgroundFill(Color.rgb(20, 174, 92), null, null);
     BackgroundFill btnFill = new BackgroundFill(Color.rgb(69, 194, 128), new CornerRadii(20), null);
     Background btnBg = new Background(btnFill);
@@ -30,11 +35,15 @@ public class Main extends Application{
     Border btnBorder = new Border(btnStroke);
     Background bg = new Background(bgFill);
 
-    EventHandler<ActionEvent> returnToHome, startRound1;
+    EventHandler<ActionEvent> returnToHome;
 
     HashMap<String, Scene> sceneMap = new HashMap<>();
+    HashMap<String, String> resultMsg = new HashMap<>();
 
-    double playerBalance;
+    static final int picHeight = 246;
+    static final int picWidth = 180;
+
+    String winner;
 
     public static void main(String[] args){
         launch(args);
@@ -45,6 +54,10 @@ public class Main extends Application{
 
         game = new BlackjackGame();
 
+        resultMsg.put("player", "You Won!");
+        resultMsg.put("dealer", "You Lost...");
+        resultMsg.put("push", "Drawn");
+
         returnToHome = e -> {
             mainStage.setScene(sceneMap.get("start"));
         };
@@ -52,6 +65,7 @@ public class Main extends Application{
         sceneMap.put("start", createStartScene());
         sceneMap.put("setup", createSetupScene());
         sceneMap.put("rules", createRulesScene());
+        sceneMap.put("play", createPlayScene());
 
         startBtn.setOnAction(e ->{
             mainStage.setScene(sceneMap.get("setup"));
@@ -61,18 +75,24 @@ public class Main extends Application{
             mainStage.setScene(sceneMap.get("rules"));
         });
 
-        startRoundBtn.setOnAction(e->{
+        startRoundBtn1.setOnAction(e->{
             try{
-                playerBalance = Double.parseDouble(balanceInput.getText());
+
+                errorMsg.setText("");
+                game.totalWinnings = Double.parseDouble(balanceInput.getText());
 
                 game.currentBet = Double.parseDouble(betInput.getText());
 
                 balanceInput.setText("Enter a starting balance");
                 betInput.setText("Enter a bet");
 
-                playerBalance -= game.currentBet;
+                balanceAndBet.setText("Balance: $" + game.totalWinnings + "\n" +
+                                      "Bet: $" + game.currentBet);
 
-                mainStage.setScene(createPlayScene());
+                newBetInput.setText(String.valueOf(game.currentBet));
+
+                mainStage.setScene(sceneMap.get("play"));
+                beginGame();
 
             }
             catch (NumberFormatException ignored){
@@ -81,11 +101,35 @@ public class Main extends Application{
 
         });
 
-        mainStage.setTitle("Blackjack");
+        hitBtn.setOnAction(e->{
 
-//        mainStage.setScene(sceneMap.get("start"));
-        mainStage.setScene(createPlayScene());
-//        mainStage.setResizable(false);
+            Card newCard = game.theDealer.drawOne();
+            String cardName = newCard.value + "_" + newCard.suit + ".png";
+
+            Image newImage = new Image(cardName);
+            ImageView viewImage = new ImageView(newImage);
+            viewImage.setFitHeight(picHeight);
+            viewImage.setFitWidth(picWidth);
+
+            game.playerHand.add(newCard);
+            playerSide.getChildren().add(viewImage);
+
+            if (determinePlayerBust()){
+                winner = endRound();
+
+                if (game.totalWinnings < 0.0){
+                    mainStage.setScene(sceneMap.get("lose"));
+                }
+                else{
+                    mainStage.setScene(sceneMap.get("end"));
+                }
+
+            }
+
+        });
+
+        mainStage.setTitle("Blackjack");
+        mainStage.setScene(sceneMap.get("start"));
         mainStage.show();
 
     }
@@ -163,18 +207,38 @@ public class Main extends Application{
 
         Text balanceText = new Text("Set Your Starting Amount");
         Text betText = new Text("Set Your Starting Bet");
+        balanceText.setStyle("-fx-font-size: 40");
+        betText.setStyle("-fx-font-size: 40");
+
         errorMsg = new Text();
         errorMsg.setStyle("-fx-font-size: 20");
 
         balanceInput = new TextField("Enter a starting balance");
         betInput = new TextField("Enter a bet");
+        balanceInput.setStyle("-fx-font-size: 30");
+        betInput.setStyle("-fx-font-size: 30");
+        balanceInput.setAlignment(Pos.valueOf("CENTER"));
+        betInput.setAlignment(Pos.valueOf("CENTER"));
+        balanceInput.setMinSize(400, 50);
+        betInput.setMinSize(400, 50);
+        balanceInput.setMaxSize(400, 100);
+        betInput.setMaxSize(400, 100);
 
-        startRoundBtn = new Button("Start Game");
-        startRoundBtn.setOnAction(startRound1);
-        startRoundBtn.setMinSize(200, 50);
-        startRoundBtn.setBackground(btnBg);
-        startRoundBtn.setBorder(btnBorder);
-        startRoundBtn.setStyle("-fx-font-size: 20;");
+        BackgroundFill inputFill = new BackgroundFill(Color.rgb(175, 244, 198), new CornerRadii(5), null);
+        Background inputBg = new Background(inputFill);
+        balanceInput.setBackground(inputBg);
+        betInput.setBackground(inputBg);
+
+        BorderStroke inputStroke = new BorderStroke(Color.rgb(101, 191, 140), BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2));
+        Border inputBorder = new Border(inputStroke);
+        balanceInput.setBorder(inputBorder);
+        betInput.setBorder(inputBorder);
+
+        startRoundBtn1 = new Button("Start Game");
+        startRoundBtn1.setMinSize(200, 50);
+        startRoundBtn1.setBackground(btnBg);
+        startRoundBtn1.setBorder(btnBorder);
+        startRoundBtn1.setStyle("-fx-font-size: 20;");
 
         Button setUpReturn = new Button("Return");
         setUpReturn.setOnAction(returnToHome);
@@ -185,36 +249,10 @@ public class Main extends Application{
 
         VBox v1 = new VBox(20, balanceText, balanceInput);
         VBox v2 = new VBox(20, betText, betInput);
-        VBox v3 = new VBox(50, v1, v2, startRoundBtn, setUpReturn, errorMsg);
+        VBox v3 = new VBox(50, v1, v2, startRoundBtn1, setUpReturn, errorMsg);
         v1.setAlignment(Pos.valueOf("CENTER"));
         v2.setAlignment(Pos.valueOf("CENTER"));
         v3.setAlignment(Pos.valueOf("CENTER"));
-
-        balanceInput.setMinSize(400, 50);
-        betInput.setMinSize(400, 50);
-        balanceInput.setMaxSize(400, 100);
-        betInput.setMaxSize(400, 100);
-
-        BackgroundFill inputFill = new BackgroundFill(Color.rgb(175, 244, 198), new CornerRadii(5), null);
-        Background inputBg = new Background(inputFill);
-
-        balanceInput.setBackground(inputBg);
-        betInput.setBackground(inputBg);
-
-        BorderStroke inputStroke = new BorderStroke(Color.rgb(101, 191, 140), BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2));
-        Border inputBorder = new Border(inputStroke);
-
-        balanceText.setStyle("-fx-font-size: 40");
-        betText.setStyle("-fx-font-size: 40");
-
-        balanceInput.setStyle("-fx-font-size: 30");
-        betInput.setStyle("-fx-font-size: 30");
-
-        balanceInput.setAlignment(Pos.valueOf("CENTER"));
-        betInput.setAlignment(Pos.valueOf("CENTER"));
-
-        balanceInput.setBorder(inputBorder);
-        betInput.setBorder(inputBorder);
 
         BorderPane pane = new BorderPane();
         pane.setCenter(v3);
@@ -237,8 +275,7 @@ public class Main extends Application{
         HBox buttonBox = new HBox(150, hitBtn, stayBtn);
         buttonBox.setAlignment(Pos.CENTER);
 
-        Text balanceAndBet = new Text("Balance: $" + playerBalance + "\n" +
-                                "Bet: $" + game.currentBet);
+        balanceAndBet = new Text();
         balanceAndBet.setFill(Color.WHITE);
         balanceAndBet.setStyle("-fx-font-size: 25");
 
@@ -248,13 +285,13 @@ public class Main extends Application{
         lowerRail.setMinHeight(100);
         lowerRail.setMaxHeight(100);
 
-        dealerSide = new HBox(new Button("test"));
-        playerSide = new HBox(new Button("test"));
+        dealerSide = new HBox(20);
+        playerSide = new HBox(20);
 
         dealerSide.setAlignment(Pos.CENTER);
         playerSide.setAlignment(Pos.CENTER);
 
-        VBox table = new VBox(700, dealerSide, playerSide);
+        VBox table = new VBox(300, dealerSide, playerSide);
 
         BorderPane centerPane = new BorderPane();
         centerPane.setCenter(table);
@@ -276,4 +313,67 @@ public class Main extends Application{
         return new Scene(pane, 1500, 1200);
     }
 
+    private Scene createEndScene(){
+
+        Text result = new Text(resultMsg.get(winner));
+
+        Text continueMsg1 = new Text("Keep Playing?");
+        Text continueMsg2 = new Text("Change your bet, or continue with the same bet");
+        newBetInput = new TextField();
+        newBetInput.setAlignment(Pos.CENTER);
+
+        startRoundBtn2 = new Button("Continue");
+
+        return null;
+    }
+
+    private void beginGame(){
+
+        playerSide.getChildren().clear();
+        dealerSide.getChildren().clear();
+
+        game.theDealer.generateDeck();
+
+        game.playerHand = game.theDealer.dealHand();
+        game.bankerHand = game.theDealer.dealHand();
+
+        String cardName = game.bankerHand.get(0).value + "_" + game.bankerHand.get(0).suit + ".png";
+
+        Image newCard = new Image(cardName);
+        ImageView viewImage = new ImageView(newCard);
+        viewImage.setFitHeight(picHeight);
+        viewImage.setFitWidth(picWidth);
+
+        dealerSide.getChildren().add(viewImage);
+
+        newCard = new Image("back.png");
+        viewImage = new ImageView(newCard);
+        viewImage.setFitHeight(picHeight);
+        viewImage.setFitWidth(picWidth);
+
+        dealerSide.getChildren().add(viewImage);
+
+        for (Card card : game.playerHand){
+            cardName = card.value + "_" + card.suit + ".png";
+            newCard = new Image(cardName);
+            viewImage = new ImageView(newCard);
+            viewImage.setFitHeight(picHeight);
+            viewImage.setFitWidth(picWidth);
+
+            playerSide.getChildren().add(viewImage);
+        }
+
+    }
+
+    private boolean determinePlayerBust(){
+        return game.gameLogic.handTotal(game.playerHand) > 21;
+    }
+
+    private String endRound(){
+
+        double winnings = game.evaluateWinnings();
+        game.totalWinnings += winnings;
+
+        return game.gameLogic.whoWon(game.playerHand, game.bankerHand);
+    }
 }
