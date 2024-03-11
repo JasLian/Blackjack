@@ -89,7 +89,7 @@ public class Main extends Application{
                 balanceAndBet.setText("Balance: $" + game.totalWinnings + "\n" +
                                       "Bet: $" + game.currentBet);
 
-                newBetInput.setText(String.valueOf(game.currentBet));
+//                newBetInput.setText(String.valueOf(game.currentBet));
 
                 mainStage.setScene(sceneMap.get("play"));
                 beginGame();
@@ -272,6 +272,14 @@ public class Main extends Application{
         hitBtn = new Button("Hit");
         stayBtn = new Button("Stay");
 
+        hitBtn.setMinSize(100, 50);
+        stayBtn.setMinSize(100, 50);
+
+        BackgroundFill controlFill = new BackgroundFill(Color.rgb(230, 230, 230), new CornerRadii(10), null);
+        Background controlBg = new Background(controlFill);
+        hitBtn.setBackground(controlBg);
+        stayBtn.setBackground(controlBg);
+
         HBox buttonBox = new HBox(150, hitBtn, stayBtn);
         buttonBox.setAlignment(Pos.CENTER);
 
@@ -279,7 +287,7 @@ public class Main extends Application{
         balanceAndBet.setFill(Color.WHITE);
         balanceAndBet.setStyle("-fx-font-size: 25");
 
-        HBox lowerUI = new HBox(500, balanceAndBet, buttonBox);
+        HBox lowerUI = new HBox(450, balanceAndBet, buttonBox);
         lowerUI.setAlignment(Pos.CENTER);
         HBox lowerRail = new HBox(lowerUI);
         lowerRail.setMinHeight(100);
