@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -12,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -25,7 +27,7 @@ public class Main extends Application{
     HBox dealerSide, playerSide;
 
     Button startBtn, rulesBtn, startRoundBtn1, startRoundBtn2, hitBtn, stayBtn;
-    Text errorMsg, balanceAndBet;
+    Text errorMsg, balanceAndBet, result;
     TextField balanceInput, betInput, newBetInput;
     BackgroundFill bgFill = new BackgroundFill(Color.rgb(20, 174, 92), null, null);
     BackgroundFill btnFill = new BackgroundFill(Color.rgb(69, 194, 128), new CornerRadii(20), null);
@@ -40,8 +42,11 @@ public class Main extends Application{
     HashMap<String, Scene> sceneMap = new HashMap<>();
     HashMap<String, String> resultMsg = new HashMap<>();
 
-    static final int picHeight = 246;
-    static final int picWidth = 180;
+    private static double windowHeight;
+    private static double windowWidth;
+
+    private static int picHeight;
+    private static int picWidth;
 
     String winner;
 
@@ -51,6 +56,15 @@ public class Main extends Application{
 
     @Override
     public void start(Stage mainStage) throws Exception {
+
+        Rectangle2D mainScreen = Screen.getPrimary().getVisualBounds();
+        windowHeight = mainScreen.getHeight() * 0.9;
+        windowWidth = mainScreen.getWidth() * 0.8;
+
+        picWidth = (int) (windowWidth / 8.0);
+        picHeight = (int) (windowHeight / 5.0);
+
+        System.out.println(windowWidth + " " + windowHeight);
 
         game = new BlackjackGame();
 
@@ -66,6 +80,7 @@ public class Main extends Application{
         sceneMap.put("setup", createSetupScene());
         sceneMap.put("rules", createRulesScene());
         sceneMap.put("play", createPlayScene());
+        sceneMap.put("end", createEndScene());
 
         startBtn.setOnAction(e ->{
             mainStage.setScene(sceneMap.get("setup"));
@@ -89,7 +104,7 @@ public class Main extends Application{
                 balanceAndBet.setText("Balance: $" + game.totalWinnings + "\n" +
                                       "Bet: $" + game.currentBet);
 
-//                newBetInput.setText(String.valueOf(game.currentBet));
+                newBetInput.setText(String.valueOf(game.currentBet));
 
                 mainStage.setScene(sceneMap.get("play"));
                 beginGame();
@@ -114,7 +129,7 @@ public class Main extends Application{
             game.playerHand.add(newCard);
             playerSide.getChildren().add(viewImage);
 
-            if (determinePlayerBust()){
+            if (determineBust(game.playerHand)){
                 winner = endRound();
 
                 if (game.totalWinnings < 0.0){
@@ -125,6 +140,30 @@ public class Main extends Application{
                 }
 
             }
+
+        });
+
+        stayBtn.setOnAction(e->{
+
+            boolean bust = determineBust(game.bankerHand);
+            while (game.gameLogic.evaluateBankerDraw(game.bankerHand) && !bust){
+                Card newCard = game.theDealer.drawOne();
+                game.bankerHand.add(newCard);
+                dealerSide.getChildren().add(makeNewCardImage(newCard));
+            }
+
+            winner = endRound();
+
+            if (game.totalWinnings < 0.0){
+                mainStage.setScene(sceneMap.get("lose"));
+            }
+            else{
+                mainStage.setScene(sceneMap.get("end"));
+            }
+
+        });
+
+        startRoundBtn2.setOnAction(e->{
 
         });
 
@@ -141,28 +180,28 @@ public class Main extends Application{
         Text titleText = new Text("BLACKJACK");
 
         startBtn = new Button("Start");
-        startBtn.setMinSize(200, 50);
+        startBtn.setMinSize(windowWidth / 10, windowHeight / 20);
         startBtn.setBackground(btnBg);
         startBtn.setBorder(btnBorder);
 
         rulesBtn = new Button("Rules");
-        rulesBtn.setMinSize(200, 50);
+        rulesBtn.setMinSize(windowWidth / 10, windowHeight / 20);
         rulesBtn.setBackground(btnBg);
         rulesBtn.setBorder(btnBorder);
 
-        VBox v = new VBox(50, titleText, startBtn, rulesBtn);
+        VBox v = new VBox(windowHeight / 24, titleText, startBtn, rulesBtn);
         v.setAlignment(Pos.valueOf("BASELINE_CENTER"));
         v.setStyle("-fx-font-size: 20;");
 
         titleText.setStyle("-fx-font-size: 50;");
 
         pane.setCenter(v);
-        pane.setPadding(new Insets(100, 200, 500, 200));
+        pane.setPadding(new Insets(windowHeight / 12, windowWidth / 7.5, windowHeight / 2.4, windowWidth / 7.5));
 
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman'");
 
-        return new Scene(pane, 1500, 1200);
+        return new Scene(pane, windowWidth, windowHeight);
 
     }
 
@@ -183,24 +222,24 @@ public class Main extends Application{
 
         Button rulesReturn = new Button("Return");
         rulesReturn.setOnAction(returnToHome);
-        rulesReturn.setMinSize(200, 50);
+        rulesReturn.setMinSize(windowWidth / 10, windowHeight / 20);
         rulesReturn.setBackground(btnBg);
         rulesReturn.setBorder(btnBorder);
         rulesReturn.setStyle("-fx-font-size: 20;");
 
-        VBox box = new VBox(50, ruleTitle, ruleText, rulesReturn);
+        VBox box = new VBox(windowHeight / 24, ruleTitle, ruleText, rulesReturn);
         box.maxWidth(50);
 
         BorderPane pane = new BorderPane();
         pane.setCenter(box);
-        pane.setPadding(new Insets(100, 200, 500, 200));
+        pane.setPadding(new Insets(windowHeight / 12, windowWidth / 7.5, windowHeight / 2.4, windowWidth / 7.5));
 
         box.setAlignment(Pos.valueOf("CENTER"));
 
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman'");
 
-        return new Scene(pane, 1500, 1200);
+        return new Scene(pane, windowWidth, windowHeight);
     }
 
     private Scene createSetupScene(){
@@ -215,14 +254,14 @@ public class Main extends Application{
 
         balanceInput = new TextField("Enter a starting balance");
         betInput = new TextField("Enter a bet");
-        balanceInput.setStyle("-fx-font-size: 30");
-        betInput.setStyle("-fx-font-size: 30");
+        balanceInput.setStyle("-fx-font-size: 25");
+        betInput.setStyle("-fx-font-size: 25");
         balanceInput.setAlignment(Pos.valueOf("CENTER"));
         betInput.setAlignment(Pos.valueOf("CENTER"));
-        balanceInput.setMinSize(400, 50);
-        betInput.setMinSize(400, 50);
-        balanceInput.setMaxSize(400, 100);
-        betInput.setMaxSize(400, 100);
+        balanceInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
+        betInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
+        balanceInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
+        betInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
 
         BackgroundFill inputFill = new BackgroundFill(Color.rgb(175, 244, 198), new CornerRadii(5), null);
         Background inputBg = new Background(inputFill);
@@ -235,45 +274,45 @@ public class Main extends Application{
         betInput.setBorder(inputBorder);
 
         startRoundBtn1 = new Button("Start Game");
-        startRoundBtn1.setMinSize(200, 50);
+        startRoundBtn1.setMinSize(windowWidth / 10, windowHeight / 20);
         startRoundBtn1.setBackground(btnBg);
         startRoundBtn1.setBorder(btnBorder);
         startRoundBtn1.setStyle("-fx-font-size: 20;");
 
         Button setUpReturn = new Button("Return");
         setUpReturn.setOnAction(returnToHome);
-        setUpReturn.setMinSize(200, 50);
+        setUpReturn.setMinSize(windowWidth / 10, windowHeight / 20);
         setUpReturn.setBackground(btnBg);
         setUpReturn.setBorder(btnBorder);
         setUpReturn.setStyle("-fx-font-size: 20;");
 
-        VBox v1 = new VBox(20, balanceText, balanceInput);
-        VBox v2 = new VBox(20, betText, betInput);
-        VBox v3 = new VBox(50, v1, v2, startRoundBtn1, setUpReturn, errorMsg);
+        VBox v1 = new VBox(windowHeight / 60, balanceText, balanceInput);
+        VBox v2 = new VBox(windowHeight / 60, betText, betInput);
+        VBox v3 = new VBox(windowHeight / 24, v1, v2, startRoundBtn1, setUpReturn, errorMsg);
         v1.setAlignment(Pos.valueOf("CENTER"));
         v2.setAlignment(Pos.valueOf("CENTER"));
         v3.setAlignment(Pos.valueOf("CENTER"));
 
         BorderPane pane = new BorderPane();
         pane.setCenter(v3);
-        pane.setPadding(new Insets(200, 200, 600, 200));
+        pane.setPadding(new Insets(windowHeight / 6, windowWidth / 7.5, windowHeight / 2, windowWidth / 7.5));
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman'");
 
-        return new Scene(pane, 1500, 1200);
+        return new Scene(pane, windowWidth, windowHeight);
     }
 
     private Scene createPlayScene(){
 
         HBox upperRail = new HBox();
-        upperRail.setMinHeight(100);
-        upperRail.setMaxHeight(100);
+        upperRail.setMinHeight(windowHeight / 12);
+        upperRail.setMaxHeight(windowHeight / 12);
 
         hitBtn = new Button("Hit");
         stayBtn = new Button("Stay");
 
-        hitBtn.setMinSize(100, 50);
-        stayBtn.setMinSize(100, 50);
+        hitBtn.setMinSize(windowWidth / 15, windowHeight / 24);
+        stayBtn.setMinSize(windowWidth / 15, windowHeight / 24);
 
         BackgroundFill controlFill = new BackgroundFill(Color.rgb(230, 230, 230), new CornerRadii(10), null);
         Background controlBg = new Background(controlFill);
@@ -287,23 +326,23 @@ public class Main extends Application{
         balanceAndBet.setFill(Color.WHITE);
         balanceAndBet.setStyle("-fx-font-size: 25");
 
-        HBox lowerUI = new HBox(450, balanceAndBet, buttonBox);
+        HBox lowerUI = new HBox(windowWidth / 3.33, balanceAndBet, buttonBox);
         lowerUI.setAlignment(Pos.CENTER);
         HBox lowerRail = new HBox(lowerUI);
-        lowerRail.setMinHeight(100);
-        lowerRail.setMaxHeight(100);
+        lowerRail.setMinHeight(windowHeight / 12);
+        lowerRail.setMaxHeight(windowHeight / 12);
 
-        dealerSide = new HBox(20);
-        playerSide = new HBox(20);
+        dealerSide = new HBox(windowWidth / 75);
+        playerSide = new HBox(windowWidth / 75);
 
         dealerSide.setAlignment(Pos.CENTER);
         playerSide.setAlignment(Pos.CENTER);
 
-        VBox table = new VBox(300, dealerSide, playerSide);
+        VBox table = new VBox(windowHeight / 4, dealerSide, playerSide);
 
         BorderPane centerPane = new BorderPane();
         centerPane.setCenter(table);
-        centerPane.setPadding(new Insets(100, 0, 0, 0));
+        centerPane.setPadding(new Insets(windowHeight / 12, 0, 0, 0));
 
         BackgroundFill tableRailFill = new BackgroundFill(Color.rgb(125,73, 35), null, null);
         Background tableRailBg = new Background(tableRailFill);
@@ -318,21 +357,56 @@ public class Main extends Application{
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 20;");
 
-        return new Scene(pane, 1500, 1200);
+        return new Scene(pane, windowWidth, windowHeight);
     }
 
     private Scene createEndScene(){
 
-        Text result = new Text(resultMsg.get(winner));
+        result = new Text();
+        result.setStyle("-fx-font-size: 30;");
 
         Text continueMsg1 = new Text("Keep Playing?");
         Text continueMsg2 = new Text("Change your bet, or continue with the same bet");
         newBetInput = new TextField();
+        newBetInput.setMinSize(windowWidth / 3.75, windowHeight / 24);
+        newBetInput.setMaxSize(windowWidth / 3.75, windowHeight / 24);
         newBetInput.setAlignment(Pos.CENTER);
 
         startRoundBtn2 = new Button("Continue");
+        startRoundBtn2.setMinSize(windowWidth / 10, windowHeight / 20);
+        startRoundBtn2.setBackground(btnBg);
+        startRoundBtn2.setBorder(btnBorder);
 
-        return null;
+        Button endGame = new Button("Return to Home");
+        endGame.setOnAction(returnToHome);
+        endGame.setMinSize(windowWidth / 10, windowHeight / 20);
+        endGame.setBackground(btnBg);
+        endGame.setBorder(btnBorder);
+
+        VBox textBox = new VBox(windowHeight / 60, continueMsg1, continueMsg2, newBetInput);
+        textBox.setAlignment(Pos.CENTER);
+        textBox.setStyle("-fx-font-size: 25;");
+
+        VBox container = new VBox(windowHeight / 24, result, textBox, startRoundBtn2, endGame);
+        container.setAlignment(Pos.CENTER);
+
+        BorderPane pane = new BorderPane();
+        pane.setCenter(container);
+        pane.setPadding(new Insets(0, windowWidth / 7.5, 0, windowWidth / 7.5));
+        pane.setBackground(bg);
+        pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 20;");
+
+        return new Scene(pane, windowWidth, windowHeight);
+    }
+
+    private ImageView makeNewCardImage(Card newCard){
+        String imageFile = newCard.value + "_" + newCard.suit + ".png";
+        Image image = new Image(imageFile);
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(picHeight);
+        imageView.setFitWidth(picWidth);
+
+        return imageView;
     }
 
     private void beginGame(){
@@ -345,42 +419,30 @@ public class Main extends Application{
         game.playerHand = game.theDealer.dealHand();
         game.bankerHand = game.theDealer.dealHand();
 
-        String cardName = game.bankerHand.get(0).value + "_" + game.bankerHand.get(0).suit + ".png";
+        dealerSide.getChildren().add(makeNewCardImage(game.bankerHand.get(0)));
 
-        Image newCard = new Image(cardName);
-        ImageView viewImage = new ImageView(newCard);
-        viewImage.setFitHeight(picHeight);
-        viewImage.setFitWidth(picWidth);
+        Image backImage = new Image("back.png");
+        ImageView viewBackImage = new ImageView(backImage);
+        viewBackImage.setFitHeight(picHeight);
+        viewBackImage.setFitWidth(picWidth);
 
-        dealerSide.getChildren().add(viewImage);
-
-        newCard = new Image("back.png");
-        viewImage = new ImageView(newCard);
-        viewImage.setFitHeight(picHeight);
-        viewImage.setFitWidth(picWidth);
-
-        dealerSide.getChildren().add(viewImage);
+        dealerSide.getChildren().add(viewBackImage);
 
         for (Card card : game.playerHand){
-            cardName = card.value + "_" + card.suit + ".png";
-            newCard = new Image(cardName);
-            viewImage = new ImageView(newCard);
-            viewImage.setFitHeight(picHeight);
-            viewImage.setFitWidth(picWidth);
-
-            playerSide.getChildren().add(viewImage);
+            playerSide.getChildren().add(makeNewCardImage(card));
         }
 
     }
 
-    private boolean determinePlayerBust(){
-        return game.gameLogic.handTotal(game.playerHand) > 21;
+    private boolean determineBust(ArrayList<Card> hand){
+        return game.gameLogic.handTotal(hand) > 21;
     }
 
     private String endRound(){
 
         double winnings = game.evaluateWinnings();
         game.totalWinnings += winnings;
+        result.setText(resultMsg.get(winner));
 
         return game.gameLogic.whoWon(game.playerHand, game.bankerHand);
     }
