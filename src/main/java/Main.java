@@ -164,6 +164,14 @@ public class Main extends Application{
         });
 
         startRoundBtn2.setOnAction(e->{
+            try{
+                game.currentBet = Double.parseDouble(newBetInput.getText());
+                balanceAndBet.setText("Balance: $" + game.totalWinnings + "\n" +
+                        "Bet: $" + game.currentBet);
+            }
+            catch (NumberFormatException ignored){
+                //pass
+            }
 
         });
 
@@ -190,7 +198,7 @@ public class Main extends Application{
         rulesBtn.setBorder(btnBorder);
 
         VBox v = new VBox(windowHeight / 24, titleText, startBtn, rulesBtn);
-        v.setAlignment(Pos.valueOf("BASELINE_CENTER"));
+        v.setAlignment(Pos.CENTER);
         v.setStyle("-fx-font-size: 20;");
 
         titleText.setStyle("-fx-font-size: 50;");
@@ -234,7 +242,7 @@ public class Main extends Application{
         pane.setCenter(box);
         pane.setPadding(new Insets(windowHeight / 12, windowWidth / 7.5, windowHeight / 2.4, windowWidth / 7.5));
 
-        box.setAlignment(Pos.valueOf("CENTER"));
+        box.setAlignment(Pos.CENTER);
 
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman'");
@@ -253,15 +261,16 @@ public class Main extends Application{
         errorMsg.setStyle("-fx-font-size: 20");
 
         balanceInput = new TextField("Enter a starting balance");
-        betInput = new TextField("Enter a bet");
-        balanceInput.setStyle("-fx-font-size: 25");
-        betInput.setStyle("-fx-font-size: 25");
-        balanceInput.setAlignment(Pos.valueOf("CENTER"));
-        betInput.setAlignment(Pos.valueOf("CENTER"));
         balanceInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
-        betInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
         balanceInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
+        balanceInput.setAlignment(Pos.CENTER);
+        balanceInput.setStyle("-fx-font-size: 25");
+
+        betInput = new TextField("Enter a bet");
+        betInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
         betInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
+        betInput.setAlignment(Pos.CENTER);
+        betInput.setStyle("-fx-font-size: 25");
 
         BackgroundFill inputFill = new BackgroundFill(Color.rgb(175, 244, 198), new CornerRadii(5), null);
         Background inputBg = new Background(inputFill);
