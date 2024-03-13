@@ -17,6 +17,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -27,7 +28,7 @@ public class Main extends Application{
     HBox dealerSide, playerSide;
 
     Button startBtn, rulesBtn, startRoundBtn1, startRoundBtn2, hitBtn, stayBtn;
-    Text errorMsg, balanceAndBet, result;
+    Text errorMsg, endErrorMsg, balanceAndBet, result, newBalance;
     TextField balanceInput, betInput, newBetInput;
     BackgroundFill bgFill = new BackgroundFill(Color.rgb(20, 174, 92), null, null);
     BackgroundFill btnFill = new BackgroundFill(Color.rgb(69, 194, 128), new CornerRadii(20), null);
@@ -61,8 +62,11 @@ public class Main extends Application{
         windowHeight = mainScreen.getHeight() * 0.9;
         windowWidth = mainScreen.getWidth() * 0.8;
 
+        mainStage.setMinHeight(windowWidth);
+        mainStage.setMinHeight(windowHeight);
+
         picWidth = (int) (windowWidth / 8.0);
-        picHeight = (int) (windowHeight / 5.0);
+        picHeight = (int) (windowHeight / 4.0);
 
         System.out.println(windowWidth + " " + windowHeight);
 
@@ -93,18 +97,25 @@ public class Main extends Application{
         startRoundBtn1.setOnAction(e->{
             try{
 
-                errorMsg.setText("");
                 game.totalWinnings = Double.parseDouble(balanceInput.getText());
-
                 game.currentBet = Double.parseDouble(betInput.getText());
+
+                if (game.currentBet < 0.0 || game.totalWinnings < 0.0 || game.totalWinnings - game.currentBet < 0.0){
+                    errorMsg.setText("The bet amount cannot be used, as it is either negative, OR your balance is insufficient");
+                    return;
+                }
+
+                game.currentBet = Math.round(game.currentBet * 100) / 100.0;
+                game.totalWinnings = Math.round(game.totalWinnings * 100) / 100.0;
+
+                game.totalWinnings -= game.currentBet;
 
                 balanceInput.setText("Enter a starting balance");
                 betInput.setText("Enter a bet");
 
-                balanceAndBet.setText("Balance: $" + game.totalWinnings + "\n" +
-                                      "Bet: $" + game.currentBet);
+                balanceAndBet.setText(String.format("Balance: $%.2f\nBet: $%.2f", game.totalWinnings, game.currentBet));
 
-                newBetInput.setText(String.valueOf(game.currentBet));
+                newBetInput.setText(String.format("%.2f", game.currentBet));
 
                 mainStage.setScene(sceneMap.get("play"));
                 beginGame();
@@ -130,7 +141,7 @@ public class Main extends Application{
             playerSide.getChildren().add(viewImage);
 
             if (determineBust(game.playerHand)){
-                winner = endRound();
+                endRound();
 
                 if (game.totalWinnings < 0.0){
                     mainStage.setScene(sceneMap.get("lose"));
@@ -152,7 +163,7 @@ public class Main extends Application{
                 dealerSide.getChildren().add(makeNewCardImage(newCard));
             }
 
-            winner = endRound();
+            endRound();
 
             if (game.totalWinnings < 0.0){
                 mainStage.setScene(sceneMap.get("lose"));
@@ -166,11 +177,25 @@ public class Main extends Application{
         startRoundBtn2.setOnAction(e->{
             try{
                 game.currentBet = Double.parseDouble(newBetInput.getText());
-                balanceAndBet.setText("Balance: $" + game.totalWinnings + "\n" +
-                        "Bet: $" + game.currentBet);
+
+                if (game.currentBet < 0.0 || game.totalWinnings - game.currentBet < 0.0){
+                    endErrorMsg.setText("The bet amount cannot be used, as it is either negative, OR your balance is not sufficient");
+                    return;
+                }
+
+                game.currentBet = Math.round(game.currentBet * 100) / 100.0;
+
+                game.totalWinnings -= game.currentBet;
+
+                balanceAndBet.setText(String.format("Balance: $%.2f\nBet: $%.2f", game.totalWinnings, game.currentBet));
+                newBetInput.setText(String.format("%.2f", game.currentBet));
+
+                beginGame();
+                mainStage.setScene(sceneMap.get("play"));
+
             }
             catch (NumberFormatException ignored){
-                //pass
+                endErrorMsg.setText("Invalid value entered for balance and/or bet. Please try again.");
             }
 
         });
@@ -186,6 +211,7 @@ public class Main extends Application{
         BorderPane pane = new BorderPane();
 
         Text titleText = new Text("BLACKJACK");
+        titleText.setStyle("-fx-font-size: 50;");
 
         startBtn = new Button("Start");
         startBtn.setMinSize(windowWidth / 10, windowHeight / 20);
@@ -199,9 +225,7 @@ public class Main extends Application{
 
         VBox v = new VBox(windowHeight / 24, titleText, startBtn, rulesBtn);
         v.setAlignment(Pos.CENTER);
-        v.setStyle("-fx-font-size: 20;");
-
-        titleText.setStyle("-fx-font-size: 50;");
+        v.setStyle("-fx-font-size: 25;");
 
         pane.setCenter(v);
         pane.setPadding(new Insets(windowHeight / 12, windowWidth / 7.5, windowHeight / 2.4, windowWidth / 7.5));
@@ -216,7 +240,7 @@ public class Main extends Application{
     private Scene createRulesScene(){
 
         Text ruleTitle = new Text("How to Play");
-        ruleTitle.setStyle("-fx-font-size: 30;");
+        ruleTitle.setStyle("-fx-font-size: 40;");
 
         Text ruleText = new Text("• Objective: Beat the dealer's hand without going over 21.\n\n" +
                                     "• Dealing: Both the player and dealer are dealt two cards. The player will only know one of the dealer’s card\n\n" +
@@ -225,7 +249,7 @@ public class Main extends Application{
                                     "• Dealer's Turn: The dealer reveals their face-down card after the player have finished their turn. They must hit until they reach 17 or higher. On hands 17 or higher, the dealer will stay\n\n" +
                                     "• Players win if their hand is closer to 21 than the dealer's without going over. If the player or dealer busts (exceeds 21), they lose\n\n" +
                                     "• If both sides have the same value hand, it is a draw and the round is over without any money changing hands.\n\n");
-        ruleText.setStyle("-fx-font-size: 25;");
+        ruleText.setStyle("-fx-font-size: 30;");
         ruleText.setWrappingWidth(900);
 
         Button rulesReturn = new Button("Return");
@@ -233,7 +257,7 @@ public class Main extends Application{
         rulesReturn.setMinSize(windowWidth / 10, windowHeight / 20);
         rulesReturn.setBackground(btnBg);
         rulesReturn.setBorder(btnBorder);
-        rulesReturn.setStyle("-fx-font-size: 20;");
+        rulesReturn.setStyle("-fx-font-size: 25;");
 
         VBox box = new VBox(windowHeight / 24, ruleTitle, ruleText, rulesReturn);
         box.maxWidth(50);
@@ -286,14 +310,14 @@ public class Main extends Application{
         startRoundBtn1.setMinSize(windowWidth / 10, windowHeight / 20);
         startRoundBtn1.setBackground(btnBg);
         startRoundBtn1.setBorder(btnBorder);
-        startRoundBtn1.setStyle("-fx-font-size: 20;");
+        startRoundBtn1.setStyle("-fx-font-size: 25;");
 
         Button setUpReturn = new Button("Return");
         setUpReturn.setOnAction(returnToHome);
         setUpReturn.setMinSize(windowWidth / 10, windowHeight / 20);
         setUpReturn.setBackground(btnBg);
         setUpReturn.setBorder(btnBorder);
-        setUpReturn.setStyle("-fx-font-size: 20;");
+        setUpReturn.setStyle("-fx-font-size: 25;");
 
         VBox v1 = new VBox(windowHeight / 60, balanceText, balanceInput);
         VBox v2 = new VBox(windowHeight / 60, betText, betInput);
@@ -332,12 +356,18 @@ public class Main extends Application{
         buttonBox.setAlignment(Pos.CENTER);
 
         balanceAndBet = new Text();
+        balanceInput.setMaxWidth(windowWidth / 10);
         balanceAndBet.setFill(Color.WHITE);
         balanceAndBet.setStyle("-fx-font-size: 25");
+        balanceInput.setAlignment(Pos.CENTER);
 
-        HBox lowerUI = new HBox(windowWidth / 3.33, balanceAndBet, buttonBox);
-        lowerUI.setAlignment(Pos.CENTER);
-        HBox lowerRail = new HBox(lowerUI);
+        HBox textBox = new HBox(balanceAndBet);
+        textBox.setAlignment(Pos.CENTER);
+
+        BorderPane lowerRail = new BorderPane();
+        lowerRail.setCenter(buttonBox);
+        lowerRail.setPadding(new Insets(0, windowWidth / 12, 0, 5));
+        lowerRail.setLeft(textBox);
         lowerRail.setMinHeight(windowHeight / 12);
         lowerRail.setMaxHeight(windowHeight / 12);
 
@@ -351,7 +381,7 @@ public class Main extends Application{
 
         BorderPane centerPane = new BorderPane();
         centerPane.setCenter(table);
-        centerPane.setPadding(new Insets(windowHeight / 12, 0, 0, 0));
+        centerPane.setPadding(new Insets(windowHeight / 20, 0, windowHeight / 24, 0));
 
         BackgroundFill tableRailFill = new BackgroundFill(Color.rgb(125,73, 35), null, null);
         Background tableRailBg = new Background(tableRailFill);
@@ -372,10 +402,16 @@ public class Main extends Application{
     private Scene createEndScene(){
 
         result = new Text();
-        result.setStyle("-fx-font-size: 30;");
+        result.setStyle("-fx-font-size: 40;");
+
+        endErrorMsg = new Text();
+        endErrorMsg.setStyle("-fx-font-size: 20");
 
         Text continueMsg1 = new Text("Keep Playing?");
         Text continueMsg2 = new Text("Change your bet, or continue with the same bet");
+
+        newBalance = new Text();
+
         newBetInput = new TextField();
         newBetInput.setMinSize(windowWidth / 3.75, windowHeight / 24);
         newBetInput.setMaxSize(windowWidth / 3.75, windowHeight / 24);
@@ -383,27 +419,29 @@ public class Main extends Application{
 
         startRoundBtn2 = new Button("Continue");
         startRoundBtn2.setMinSize(windowWidth / 10, windowHeight / 20);
+        startRoundBtn2.setMaxSize(windowWidth / 10, windowHeight / 20);
         startRoundBtn2.setBackground(btnBg);
         startRoundBtn2.setBorder(btnBorder);
 
-        Button endGame = new Button("Return to Home");
+        Button endGame = new Button("Home");
         endGame.setOnAction(returnToHome);
         endGame.setMinSize(windowWidth / 10, windowHeight / 20);
+        endGame.setMaxSize(windowWidth / 10, windowHeight / 20);
         endGame.setBackground(btnBg);
         endGame.setBorder(btnBorder);
 
-        VBox textBox = new VBox(windowHeight / 60, continueMsg1, continueMsg2, newBetInput);
+        VBox textBox = new VBox(windowHeight / 60, continueMsg1, newBalance, continueMsg2, newBetInput);
         textBox.setAlignment(Pos.CENTER);
         textBox.setStyle("-fx-font-size: 25;");
 
-        VBox container = new VBox(windowHeight / 24, result, textBox, startRoundBtn2, endGame);
+        VBox container = new VBox(windowHeight / 24, result, textBox, startRoundBtn2, endGame, endErrorMsg);
         container.setAlignment(Pos.CENTER);
 
         BorderPane pane = new BorderPane();
         pane.setCenter(container);
         pane.setPadding(new Insets(0, windowWidth / 7.5, 0, windowWidth / 7.5));
         pane.setBackground(bg);
-        pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 20;");
+        pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 25;");
 
         return new Scene(pane, windowWidth, windowHeight);
     }
@@ -447,12 +485,18 @@ public class Main extends Application{
         return game.gameLogic.handTotal(hand) > 21;
     }
 
-    private String endRound(){
+    private void endRound(){
 
         double winnings = game.evaluateWinnings();
-        game.totalWinnings += winnings;
+
+        if (winnings > 0.0){
+            game.totalWinnings += winnings + game.currentBet;
+        }
+
+        newBalance.setText("Current Balance: " + game.totalWinnings);
+
+        winner = game.gameLogic.whoWon(game.playerHand, game.bankerHand);
         result.setText(resultMsg.get(winner));
 
-        return game.gameLogic.whoWon(game.playerHand, game.bankerHand);
     }
 }
