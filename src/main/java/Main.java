@@ -115,7 +115,6 @@ public class Main extends Application{
             mainStage.setScene(sceneMap.get("start"));
         };
 
-
         // creates all scenes and stores them into the hashmap
         sceneMap.put("start", createStartScene());
         sceneMap.put("setup", createSetupScene());
