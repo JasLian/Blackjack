@@ -52,8 +52,8 @@ public class Main extends Application{
 
     EventHandler<ActionEvent> returnToHome;
 
-    PauseTransition roundOver = new PauseTransition(Duration.seconds(2));
-    PauseTransition blackjack = new PauseTransition(Duration.millis(1250));
+    PauseTransition roundOver = new PauseTransition(Duration.seconds(3));
+    PauseTransition end = new PauseTransition(Duration.millis(1500));
 
     ScrollPane scroll;
 
@@ -105,7 +105,7 @@ public class Main extends Application{
         });
 
         // PauseTransition when the player hits "blackjack"
-        blackjack.setOnFinished(e->{
+        end.setOnFinished(e->{
 
             stayBtn.fire();
         });
@@ -172,7 +172,7 @@ public class Main extends Application{
                 mainStage.setScene(sceneMap.get("play"));
                 beginGame(); // setups the round
 
-                checkBlackJack(); // checks for blackjack
+                check21(); // checks for blackjack
             }
             catch (NumberFormatException ignored){ // catches all invalid text inputs for the balance and bet
                 errorMsg.setText("Invalid value entered for balance and/or bet. Please try again.");
@@ -204,8 +204,14 @@ public class Main extends Application{
                 hitBtn.setDisable(true);
                 stayBtn.setDisable(true);
 
+                dealerSide.getChildren().remove(1);
+                addNewCardImage(game.bankerHand.get(1), dealerSide);
+
                 endRound(); // end the round
                 roundOver.play(); // scene switch pause
+            }
+            else{
+                check21(); // check if the player hits 21
             }
 
         });
@@ -258,8 +264,7 @@ public class Main extends Application{
                 beginGame();
                 mainStage.setScene(sceneMap.get("play"));
 
-                checkBlackJack();
-
+                check21(); // check if the player is dealt blackjack
             }
             catch (NumberFormatException ignored){
                 endErrorMsg.setText("Invalid value entered for balance and/or bet. Please try again.");
@@ -564,7 +569,7 @@ public class Main extends Application{
     // method clears all cards from the table and deals 2 hands to the player and dealer
     private void beginGame(){
 
-        // reenable the hit and stay buttons
+        // re-enable the hit and stay buttons
         hitBtn.setDisable(false);
         stayBtn.setDisable(false);
 
@@ -635,11 +640,22 @@ public class Main extends Application{
         btn.setStyle("-fx-font-size: 25");
     }
 
-    // method checks if the player has hit blackjack
-    private void checkBlackJack(){
-        if (game.gameLogic.handTotal(game.playerHand) == 21){
+    // method checks if the player has hit 21
+    private void check21(){
+
+        // check if the player hit blackjack or just a 21
+        if (game.gameLogic.handTotal(game.playerHand) == 21 && game.playerHand.size() == 2){
             playMsg.setText("BLACKJACK!");
-            blackjack.play(); // immediately ends the player's turn and switch to the dealer
+            dealerSide.getChildren().remove(1);
+            addNewCardImage(game.bankerHand.get(1), dealerSide);
+            end.play(); // immediately ends the player's turn and switch to the dealer
         }
+        else if (game.gameLogic.handTotal(game.playerHand) == 21){
+            playMsg.setText("21!");
+            dealerSide.getChildren().remove(1);
+            addNewCardImage(game.bankerHand.get(1), dealerSide);
+            end.play(); // immediately ends the player's turn and switch to the dealer
+        }
+
     }
 }
