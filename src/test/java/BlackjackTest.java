@@ -65,6 +65,52 @@ public class BlackjackTest {
 
         assertEquals("push", logicObj.whoWon(player, dealer));
 
+        player.clear();
+        dealer.clear();
+
+        player.add(new Card("Clubs", 1));
+        player.add(new Card("Clubs", 11));
+
+        dealer.add(new Card("Clubs", 11));
+        dealer.add(new Card("Clubs", 12));
+
+        assertEquals("player", logicObj.whoWon(player, dealer));
+
+        player.clear();
+        dealer.clear();
+
+        player.add(new Card("Clubs", 10));
+        player.add(new Card("Clubs", 12));
+
+        dealer.add(new Card("Clubs", 1));
+        dealer.add(new Card("Clubs", 12));
+
+        assertEquals("dealer", logicObj.whoWon(player, dealer));
+
+        player.clear();
+        dealer.clear();
+
+        player.add(new Card("Clubs", 1));
+        player.add(new Card("Clubs", 10));
+
+        dealer.add(new Card("Clubs", 1));
+        dealer.add(new Card("Clubs", 12));
+        dealer.add(new Card("Clubs", 12));
+
+        assertEquals("player", logicObj.whoWon(player, dealer));
+
+        player.clear();
+        dealer.clear();
+
+        player.add(new Card("Clubs", 1));
+        player.add(new Card("Clubs", 12));
+        player.add(new Card("Clubs", 12));
+
+        dealer.add(new Card("Clubs", 1));
+        dealer.add(new Card("Clubs", 10));
+
+        assertEquals("dealer", logicObj.whoWon(player, dealer));
+
     }
 
     @Test
