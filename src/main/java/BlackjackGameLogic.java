@@ -24,8 +24,22 @@ public class BlackjackGameLogic {
         }
         else if (playerVal == 21){
 
-            if (dealerVal == 21){
-                return "push";
+            if (playerHand1.size() == 2){
+
+                if (dealerVal == 21 && dealerHand.size() == 2){
+                    return "push";
+                }
+
+                return "player";
+            }
+            else if (dealerVal == 21 && dealerHand.size() == 2){
+                return "dealer";
+            }
+            else{
+
+                if (dealerVal == 21){
+                    return "push";
+                }
             }
 
             return "player";
