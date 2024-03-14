@@ -1,4 +1,8 @@
-// Card image files sourced from Google Code Archive https://code.google.com/archive/p/vector-playing-cards/
+// BlackJack Game
+// Written by Jason Liang
+// Main.java:
+// Contains all code used to make the GUI for playing a game of blackjack
+// Image files of cards sourced from Google Code Archive: https://code.google.com/archive/p/vector-playing-cards/
 
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
@@ -9,12 +13,15 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -27,11 +34,14 @@ public class Main extends Application{
 
     private BlackjackGame game;
 
+    // javafx layout components
     HBox dealerSide, playerSide;
 
     Button startBtn, rulesBtn, startRoundBtn1, startRoundBtn2, hitBtn, stayBtn;
-    Text errorMsg, endErrorMsg, balanceAndBet, result, newBalance;
+    Text errorMsg, endErrorMsg, balanceAndBet, result, newBalance, playMsg;
     TextField balanceInput, betInput, newBetInput;
+
+    // Styling components for buttons
     BackgroundFill bgFill = new BackgroundFill(Color.rgb(20, 174, 92), null, null);
     BackgroundFill btnFill = new BackgroundFill(Color.rgb(69, 194, 128), new CornerRadii(20), null);
     Background btnBg = new Background(btnFill);
@@ -42,11 +52,16 @@ public class Main extends Application{
 
     EventHandler<ActionEvent> returnToHome;
 
-    PauseTransition roundOverPause = new PauseTransition(Duration.seconds(5));
+    PauseTransition roundOver = new PauseTransition(Duration.seconds(2));
+    PauseTransition blackjack = new PauseTransition(Duration.millis(1250));
 
+    ScrollPane scroll;
+
+    // Hashmaps used to store scenes and certain messages
     HashMap<String, Scene> sceneMap = new HashMap<>();
     HashMap<String, String> resultMsg = new HashMap<>();
 
+    // private variables to be used as constants
     private static double windowHeight;
     private static double windowWidth;
 
@@ -57,9 +72,11 @@ public class Main extends Application{
         launch(args);
     }
 
+    // start function
     @Override
     public void start(Stage mainStage) throws Exception {
 
+        // retrieve the monitor size and set constants
         Rectangle2D mainScreen = Screen.getPrimary().getVisualBounds();
         windowHeight = mainScreen.getHeight() * 0.9;
         windowWidth = mainScreen.getWidth() * 0.8;
@@ -72,11 +89,13 @@ public class Main extends Application{
 
         game = new BlackjackGame();
 
+        // end messages after a round is finished
         resultMsg.put("player", "You Won!");
         resultMsg.put("dealer", "You Lost...");
         resultMsg.put("push", "Drawn");
 
-        roundOverPause.setOnFinished(e->{
+        // PauseTransition when a round is over
+        roundOver.setOnFinished(e->{
             if (game.totalWinnings <= 0.0){
                 mainStage.setScene(sceneMap.get("lose"));
             }
@@ -85,11 +104,19 @@ public class Main extends Application{
             }
         });
 
+        // PauseTransition when the player hits "blackjack"
+        blackjack.setOnFinished(e->{
+
+            stayBtn.fire();
+        });
+
+        // defines the EventHandler that returns to the start screen
         returnToHome = e -> {
             mainStage.setScene(sceneMap.get("start"));
         };
 
 
+        // creates all scenes and stores them into the hashmap
         sceneMap.put("start", createStartScene());
         sceneMap.put("setup", createSetupScene());
         sceneMap.put("rules", createRulesScene());
@@ -97,45 +124,73 @@ public class Main extends Application{
         sceneMap.put("end", createEndScene());
         sceneMap.put("lose", createLoseScene());
 
+        //
+        // Button events
+        //
+
         startBtn.setOnAction(e ->{
             mainStage.setScene(sceneMap.get("setup"));
         });
 
         rulesBtn.setOnAction(e -> {
             mainStage.setScene(sceneMap.get("rules"));
+            scroll.setVvalue(scroll.getVmin());
         });
 
         startRoundBtn1.setOnAction(e->{
+
             try{
 
+                // balance and bet is read through parsing a TextField
                 game.totalWinnings = Double.parseDouble(balanceInput.getText());
-                game.currentBet = Double.parseDouble(betInput.getText());
 
+                String inputtedBet = betInput.getText();
+                if (inputtedBet.equalsIgnoreCase("ALL")){
+                    game.currentBet = game.totalWinnings;
+                }
+                else{
+                    game.currentBet = Double.parseDouble(inputtedBet);
+                }
+
+                // if the bet cannot be used
                 if (game.currentBet < 0.0 || game.totalWinnings < 0.0 || game.totalWinnings - game.currentBet < 0.0){
                     errorMsg.setText("The bet amount cannot be used, as it is either negative, OR your balance is insufficient");
                     return;
                 }
 
+                // recalculate the totalWinnings, and update the visual elements with the new amounts
                 game.currentBet = Math.round(game.currentBet * 100) / 100.0;
                 game.totalWinnings = Math.round(game.totalWinnings * 100) / 100.0;
 
                 game.totalWinnings -= game.currentBet;
 
                 balanceInput.setText("Enter a starting balance");
-                betInput.setText("Enter a bet");
+                betInput.setText("Enter a bet or \"All\" for all in");
 
-                balanceAndBet.setText(String.format("Balance: $%.2f\nBet: $%.2f", game.totalWinnings, game.currentBet));
-
+                balanceAndBet.setText(String.format("Balance: $%,.2f\nBet: $%,.2f", game.totalWinnings, game.currentBet));
                 newBetInput.setText(String.format("%.2f", game.currentBet));
 
                 mainStage.setScene(sceneMap.get("play"));
-                beginGame();
+                beginGame(); // setups the round
 
+                checkBlackJack(); // checks for blackjack
             }
-            catch (NumberFormatException ignored){
+            catch (NumberFormatException ignored){ // catches all invalid text inputs for the balance and bet
                 errorMsg.setText("Invalid value entered for balance and/or bet. Please try again.");
             }
 
+        });
+
+        balanceInput.setOnMouseClicked(e->{
+            if (e.getButton().equals(MouseButton.PRIMARY)){
+                balanceInput.setText("");
+            }
+        });
+
+        betInput.setOnMouseClicked(e->{
+            if (e.getButton().equals(MouseButton.PRIMARY)){
+                betInput.setText("");
+            }
         });
 
         hitBtn.setOnAction(e->{
@@ -145,19 +200,26 @@ public class Main extends Application{
             game.playerHand.add(newCard);
             addNewCardImage(newCard, playerSide);
 
-            if (determineBust(game.playerHand)){
-                endRound();
+            if (determineBust(game.playerHand)){ // everytime the player hits, check if they bust
 
-                roundOverPause.play();
+                hitBtn.setDisable(true);
+                stayBtn.setDisable(true);
+
+                endRound(); // end the round
+                roundOver.play(); // scene switch pause
             }
 
         });
 
         stayBtn.setOnAction(e->{
 
+            hitBtn.setDisable(true);
+            stayBtn.setDisable(true);
+
             dealerSide.getChildren().remove(1);
             addNewCardImage(game.bankerHand.get(1), dealerSide);
 
+            // the dealer repeatedly draws, until bust or >= 17
             boolean bust = determineBust(game.bankerHand);
             while (game.gameLogic.evaluateBankerDraw(game.bankerHand) && !bust){
                 Card newCard = game.theDealer.drawOne();
@@ -165,13 +227,22 @@ public class Main extends Application{
                 addNewCardImage(newCard, dealerSide);
             }
 
-            endRound();
-            roundOverPause.play();
+            endRound(); // end the round
+            roundOver.play(); // scene switch pause
         });
 
         startRoundBtn2.setOnAction(e->{
+
+            // same method of reading in a new bet for the next round
             try{
-                game.currentBet = Double.parseDouble(newBetInput.getText());
+
+                String inputtedBet = newBetInput.getText();
+                if (inputtedBet.equalsIgnoreCase("ALL")){
+                    game.currentBet = game.totalWinnings;
+                }
+                else{
+                    game.currentBet = Double.parseDouble(inputtedBet);
+                }
 
                 if (game.currentBet < 0.0 || game.totalWinnings - game.currentBet < 0.0){
                     endErrorMsg.setText("The bet amount cannot be used, as it is either negative, OR your balance is not sufficient");
@@ -182,11 +253,13 @@ public class Main extends Application{
 
                 game.totalWinnings -= game.currentBet;
 
-                balanceAndBet.setText(String.format("Balance: $%.2f\nBet: $%.2f", game.totalWinnings, game.currentBet));
+                balanceAndBet.setText(String.format("Balance: $%,.2f\nBet: $%,.2f", game.totalWinnings, game.currentBet));
                 newBetInput.setText(String.format("%.2f", game.currentBet));
 
                 beginGame();
                 mainStage.setScene(sceneMap.get("play"));
+
+                checkBlackJack();
 
             }
             catch (NumberFormatException ignored){
@@ -195,12 +268,21 @@ public class Main extends Application{
 
         });
 
+        newBetInput.setOnMouseClicked(e->{
+            if (e.getButton().equals(MouseButton.PRIMARY)){
+                newBetInput.setText("");
+            }
+        });
+
+
+        // show the stage
         mainStage.setTitle("Blackjack");
         mainStage.setScene(sceneMap.get("start"));
+        mainStage.setResizable(false);
         mainStage.show();
-
     }
 
+    // function to create the start scene
     private Scene createStartScene(){
 
         BorderPane pane = new BorderPane();
@@ -228,6 +310,7 @@ public class Main extends Application{
 
     }
 
+    // function to create the rules scene
     private Scene createRulesScene(){
 
         Text ruleTitle = new Text("How to Play");
@@ -248,20 +331,22 @@ public class Main extends Application{
         styleButton(rulesReturnBtn);
 
         VBox box = new VBox(windowHeight / 24, ruleTitle, ruleText, rulesReturnBtn);
-        box.maxWidth(50);
+        box.setAlignment(Pos.CENTER);
 
         BorderPane pane = new BorderPane();
         pane.setCenter(box);
-        pane.setPadding(new Insets(windowHeight / 12, windowWidth / 7.5, windowHeight / 2.4, windowWidth / 7.5));
-
-        box.setAlignment(Pos.CENTER);
-
+        pane.setPadding(new Insets(windowHeight / 12, windowWidth / 7.5, windowHeight / 12, windowWidth / 7.5));
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman'");
 
-        return new Scene(pane, windowWidth, windowHeight);
+        scroll = new ScrollPane();
+        scroll.setContent(pane);
+        scroll.setFitToWidth(true);
+
+        return new Scene(scroll, windowWidth, windowHeight);
     }
 
+    // function to create the setup scene
     private Scene createSetupScene(){
 
         Text balanceText = new Text("Set Your Starting Amount");
@@ -273,14 +358,14 @@ public class Main extends Application{
         errorMsg.setStyle("-fx-font-size: 20");
 
         balanceInput = new TextField("Enter a starting balance");
-        balanceInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
-        balanceInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
+        balanceInput.setMinSize(windowWidth / 4.5, windowHeight / 22);
+        balanceInput.setMaxSize(windowWidth / 4.5, windowHeight / 22);
         balanceInput.setAlignment(Pos.CENTER);
         balanceInput.setStyle("-fx-font-size: 25");
 
-        betInput = new TextField("Enter a bet");
-        betInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
-        betInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
+        betInput = new TextField("Enter a bet or \"All\" for all in");
+        betInput.setMinSize(windowWidth / 4, windowHeight / 22);
+        betInput.setMaxSize(windowWidth / 4, windowHeight / 22);
         betInput.setAlignment(Pos.CENTER);
         betInput.setStyle("-fx-font-size: 25");
 
@@ -318,6 +403,7 @@ public class Main extends Application{
         return new Scene(pane, windowWidth, windowHeight);
     }
 
+    // function to create the play scene
     private Scene createPlayScene(){
 
         HBox upperRail = new HBox();
@@ -339,28 +425,31 @@ public class Main extends Application{
         buttonBox.setAlignment(Pos.CENTER);
 
         balanceAndBet = new Text();
-        balanceInput.setMaxWidth(windowWidth / 10);
         balanceAndBet.setFill(Color.WHITE);
         balanceAndBet.setStyle("-fx-font-size: 25");
-        balanceInput.setAlignment(Pos.CENTER);
+        balanceAndBet.setTextAlignment(TextAlignment.LEFT);
 
         HBox textBox = new HBox(balanceAndBet);
         textBox.setAlignment(Pos.CENTER);
 
         BorderPane lowerRail = new BorderPane();
         lowerRail.setCenter(buttonBox);
-        lowerRail.setPadding(new Insets(0, windowWidth / 12, 0, 5));
+        lowerRail.setPadding(new Insets(0, windowWidth / 6.5, 0, 5));
         lowerRail.setLeft(textBox);
         lowerRail.setMinHeight(windowHeight / 12);
         lowerRail.setMaxHeight(windowHeight / 12);
 
         dealerSide = new HBox(windowWidth / 75);
         playerSide = new HBox(windowWidth / 75);
-
         dealerSide.setAlignment(Pos.CENTER);
         playerSide.setAlignment(Pos.CENTER);
 
-        VBox table = new VBox(windowHeight / 4, dealerSide, playerSide);
+        playMsg = new Text();
+        playMsg.setStyle("-fx-font-size: 30;");
+        playMsg.setTextAlignment(TextAlignment.CENTER);
+
+        VBox table = new VBox(windowHeight / 12, dealerSide, playMsg, playerSide);
+        table.setAlignment(Pos.CENTER);
 
         BorderPane centerPane = new BorderPane();
         centerPane.setCenter(table);
@@ -382,6 +471,7 @@ public class Main extends Application{
         return new Scene(pane, windowWidth, windowHeight);
     }
 
+    // function to create the round end scene
     private Scene createEndScene(){
 
         result = new Text();
@@ -396,9 +486,13 @@ public class Main extends Application{
         newBalance = new Text();
 
         newBetInput = new TextField();
-        newBetInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
-        newBetInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
+        newBetInput.setMinSize(windowWidth / 4.5, windowHeight / 22);
+        newBetInput.setMaxSize(windowWidth / 4.5, windowHeight / 22);
         newBetInput.setAlignment(Pos.CENTER);
+
+        BackgroundFill inputFill = new BackgroundFill(Color.rgb(175, 244, 198), new CornerRadii(5), null);
+        Background inputBg = new Background(inputFill);
+        newBetInput.setBackground(inputBg);
 
         startRoundBtn2 = new Button("Continue");
         styleButton(startRoundBtn2);
@@ -423,6 +517,7 @@ public class Main extends Application{
         return new Scene(pane, windowWidth, windowHeight);
     }
 
+    // method to create the lose screen
     private Scene createLoseScene(){
 
         Text loseTitle = new Text("YOU'VE LOST YOUR ENTIRE BALANCE");
@@ -450,9 +545,15 @@ public class Main extends Application{
         return new Scene(pane, windowWidth, windowHeight);
     }
 
+    // method that adds a new card to the player's or dealer's side
+    // takes a Card object and a HBox as parameters
     private void addNewCardImage(Card newCard, HBox side){
+
+        // create an Image obj from the card
         String imageFile = newCard.value + "_" + newCard.suit + ".png";
         Image image = new Image(imageFile);
+
+        // create an ImageView obj and adds it to either side
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(picHeight);
         imageView.setFitWidth(picWidth);
@@ -461,13 +562,21 @@ public class Main extends Application{
 
     }
 
+    // method clears all cards from the table and deals 2 hands to the player and dealer
     private void beginGame(){
 
+        // reenable the hit and stay buttons
+        hitBtn.setDisable(false);
+        stayBtn.setDisable(false);
+
+        // clear the table
+        playMsg.setText("");
         playerSide.getChildren().clear();
         dealerSide.getChildren().clear();
 
         game.theDealer.generateDeck();
 
+        // deals both sides their hands and displays the cards
         game.playerHand = game.theDealer.dealHand();
         game.bankerHand = game.theDealer.dealHand();
 
@@ -486,10 +595,12 @@ public class Main extends Application{
 
     }
 
+    // method determines if a hand busts
     private boolean determineBust(ArrayList<Card> hand){
         return game.gameLogic.handTotal(hand) > 21;
     }
 
+    // method ends the round by calculating the winnings, and set the corresponding end messages
     private void endRound(){
 
         double winnings = game.evaluateWinnings();
@@ -498,18 +609,38 @@ public class Main extends Application{
             game.totalWinnings += winnings + game.currentBet;
         }
 
-        newBalance.setText("Current Balance: " + game.totalWinnings);
+        newBalance.setText(String.format("Current Balance: $%,.2f", game.totalWinnings));
 
         String winner = game.gameLogic.whoWon(game.playerHand, game.bankerHand);
         result.setText(resultMsg.get(winner));
 
+        String totalCmp = "(Player) " + game.gameLogic.handTotal(game.playerHand) + " -- " + game.gameLogic.handTotal(game.bankerHand) + " (Dealer)";
+        if (winner.equals("player")){
+            playMsg.setText("Player Wins\n" + totalCmp);
+        }
+        else if (winner.equals("push")){
+            playMsg.setText("Push\n" + totalCmp);
+        }
+        else{
+            playMsg.setText("House Wins\n" + totalCmp);
+        }
+
     }
 
+    // method styles a button
     private void styleButton(Button btn){
         btn.setMinSize(windowWidth / 10, windowHeight / 20);
         btn.setMaxSize(windowWidth / 8, windowHeight / 10);
         btn.setBackground(btnBg);
         btn.setBorder(btnBorder);
         btn.setStyle("-fx-font-size: 25");
+    }
+
+    // method checks if the player has hit blackjack
+    private void checkBlackJack(){
+        if (game.gameLogic.handTotal(game.playerHand) == 21){
+            playMsg.setText("BLACKJACK!");
+            blackjack.play(); // immediately ends the player's turn and switch to the dealer
+        }
     }
 }
