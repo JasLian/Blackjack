@@ -7,13 +7,13 @@ import java.util.Map;
 
 public class BlackjackTest {
 
+    // Test the construction of a Card obj
     @Test
     public void test_CardClass(){
-
         Card newCard = new Card("Diamond", 6);
 
-        assertEquals("Diamond", newCard.suit);
-        assertEquals(6, newCard.value);
+        assertEquals("Diamond", newCard.suit, "Card suit does not match what was assigned");
+        assertEquals(6, newCard.value, "Card value does not match what was assigned");
     }
 
     @Test
@@ -26,33 +26,31 @@ public class BlackjackTest {
 
         BlackjackGameLogic logicObj = new BlackjackGameLogic();
 
-        assertEquals("push", logicObj.whoWon(player, dealer));
+        assertEquals("push", logicObj.whoWon(player, dealer), "whoWon does not correctly identify a push");
 
         dealer.add(new Card("Spades", 2));
-        assertEquals("dealer", logicObj.whoWon(player,dealer));
+        assertEquals("dealer", logicObj.whoWon(player,dealer), "Dealer didn't win with a higher hand");
 
         dealer.add(new Card("Spades", 9));
-        assertEquals("dealer", logicObj.whoWon(player, dealer));
+        assertEquals("dealer", logicObj.whoWon(player, dealer), "Dealer didn't win even with a hand of 21");
 
         dealer.add(new Card("Hearts", 4));
-        assertEquals("player", logicObj.whoWon(player, dealer));
+        assertEquals("player", logicObj.whoWon(player, dealer), "Player didn't win when dealer busted");
 
         dealer = new ArrayList<>();
         dealer.add(new Card("Diamonds", 4));
 
-        assertEquals("player", logicObj.whoWon(player, dealer));
+        assertEquals("player", logicObj.whoWon(player, dealer), "Player didn't win with a higher hand");
 
         player.add(new Card("Hearts", 11));
-        assertEquals("player", logicObj.whoWon(player, dealer));
+        assertEquals("player", logicObj.whoWon(player, dealer), "Player didn't win with a higher hand (2 face cards)");
 
         player.add(new Card("Spades", 2));
-        assertEquals("dealer", logicObj.whoWon(player, dealer));
+        assertEquals("dealer", logicObj.whoWon(player, dealer), "Dealer didn't win when player busted");
 
-        dealer.add(new Card("Clubs", 17));
-        assertEquals("dealer", logicObj.whoWon(player, dealer));
-
-        dealer.add(new Card("Clubs", 3));
-        assertEquals("dealer", logicObj.whoWon(player, dealer));
+        dealer.add(new Card("Clubs", 10));
+        dealer.add(new Card("Clubs", 10));
+        assertEquals("dealer", logicObj.whoWon(player, dealer), "Dealer didn't win when the player busted (Both sides busted)");
 
         player.clear();
         dealer.clear();
@@ -63,7 +61,7 @@ public class BlackjackTest {
         dealer.add(new Card("Clubs", 1));
         dealer.add(new Card("Clubs", 12));
 
-        assertEquals("push", logicObj.whoWon(player, dealer));
+        assertEquals("push", logicObj.whoWon(player, dealer), "No push identified when both sides hit blackjack");
 
         player.clear();
         dealer.clear();
@@ -74,7 +72,7 @@ public class BlackjackTest {
         dealer.add(new Card("Clubs", 11));
         dealer.add(new Card("Clubs", 12));
 
-        assertEquals("player", logicObj.whoWon(player, dealer));
+        assertEquals("player", logicObj.whoWon(player, dealer), "Player did not with a blackjack (Dealer = 20)");
 
         player.clear();
         dealer.clear();
@@ -85,7 +83,7 @@ public class BlackjackTest {
         dealer.add(new Card("Clubs", 1));
         dealer.add(new Card("Clubs", 12));
 
-        assertEquals("dealer", logicObj.whoWon(player, dealer));
+        assertEquals("dealer", logicObj.whoWon(player, dealer), "Dealer did not with a blackjack (Player = 20)");
 
         player.clear();
         dealer.clear();
@@ -97,7 +95,7 @@ public class BlackjackTest {
         dealer.add(new Card("Clubs", 12));
         dealer.add(new Card("Clubs", 12));
 
-        assertEquals("player", logicObj.whoWon(player, dealer));
+        assertEquals("player", logicObj.whoWon(player, dealer), "Player did not with a blackjack (Dealer no blackjack)");
 
         player.clear();
         dealer.clear();
@@ -109,7 +107,7 @@ public class BlackjackTest {
         dealer.add(new Card("Clubs", 1));
         dealer.add(new Card("Clubs", 10));
 
-        assertEquals("dealer", logicObj.whoWon(player, dealer));
+        assertEquals("dealer", logicObj.whoWon(player, dealer), "Dealer did not with a blackjack (Player no blackjack)");
 
     }
 
@@ -119,28 +117,28 @@ public class BlackjackTest {
         ArrayList<Card> hand = new ArrayList<>();
         BlackjackGameLogic logicObj = new BlackjackGameLogic();
 
-        assertEquals(0, logicObj.handTotal(hand));
+        assertEquals(0, logicObj.handTotal(hand), "Empty hand didn't total 0");
 
         hand.add(new Card("Hearts", 5));
-        assertEquals(5, logicObj.handTotal(hand));
+        assertEquals(5, logicObj.handTotal(hand), "Single card hand total is incorrect");
 
         hand.add(new Card("Hearts", 5));
-        assertEquals(10, logicObj.handTotal(hand));
+        assertEquals(10, logicObj.handTotal(hand), "Two card hand totaled is incorrect");
 
         hand.add(new Card("Hearts", 1));
-        assertEquals(21, logicObj.handTotal(hand));
+        assertEquals(21, logicObj.handTotal(hand), "Did not add an Ace correct");
 
         hand = new ArrayList<>();
 
         hand.add(new Card("Hearts", 13));
         hand.add(new Card("Hearts", 1));
-        assertEquals(21, logicObj.handTotal(hand));
+        assertEquals(21, logicObj.handTotal(hand), "Did not calculate blackjack correctly");
 
         hand = new ArrayList<>();
         hand.add(new Card("Hearts", 11));
         hand.add(new Card("Hearts", 12));
         hand.add(new Card("Hearts", 13));
-        assertEquals(30, logicObj.handTotal(hand));
+        assertEquals(30, logicObj.handTotal(hand), "Did not total face cards incorrectly");
 
     }
 
@@ -152,31 +150,31 @@ public class BlackjackTest {
         ArrayList<Card> hand = new ArrayList<>();
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(11, logicObj.handTotal(hand));
+        assertEquals(11, logicObj.handTotal(hand), "Did not calculate the highest hand with only 1 Ace");
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(12, logicObj.handTotal(hand));
+        assertEquals(12, logicObj.handTotal(hand), "Did not calculate the highest hand with 2 Aces");
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(13, logicObj.handTotal(hand));
+        assertEquals(13, logicObj.handTotal(hand), "Did not calculate the best possible hand with 3 Aces");
 
         hand.add(new Card("Diamonds", 10));
-        assertEquals(13, logicObj.handTotal(hand));
+        assertEquals(13, logicObj.handTotal(hand), "Did not calculate the best possible hand with 3 Aces and a 10");
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(14, logicObj.handTotal(hand));
+        assertEquals(14, logicObj.handTotal(hand), "Did not calculate the best possible hand with 4 Aces and a 10");
 
         hand.add(new Card("Diamonds", 5));
-        assertEquals(19, logicObj.handTotal(hand));
+        assertEquals(19, logicObj.handTotal(hand), "Did not calculate the best possible hand with 4 Aces and 10 + 5");
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(20, logicObj.handTotal(hand));
+        assertEquals(20, logicObj.handTotal(hand), "Did not calculate the best possible hand with 5 Aces and a 10 + 5");
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(21, logicObj.handTotal(hand));
+        assertEquals(21, logicObj.handTotal(hand), "Did not calculate the best possible hand with 6 Aces and a 10 + 5");
 
         hand.add(new Card("Diamonds", 1));
-        assertEquals(22, logicObj.handTotal(hand));
+        assertEquals(22, logicObj.handTotal(hand), "Did not calculate the best possible hand with 7 Aces and a 10 + 5");
 
     }
 
@@ -188,14 +186,14 @@ public class BlackjackTest {
         assertTrue(logicObj.evaluateBankerDraw(dealer));
 
         dealer.add(new Card("Diamonds", 10));
-        assertTrue(logicObj.evaluateBankerDraw(dealer));
+        assertTrue(logicObj.evaluateBankerDraw(dealer), "Dealer should draw with hand of 10");
         dealer.add(new Card("Diamonds", 6));
-        assertTrue(logicObj.evaluateBankerDraw(dealer));
+        assertTrue(logicObj.evaluateBankerDraw(dealer), "Dealer should draw with hand of 16");
 
         dealer.add(new Card("Diamonds", 1));
-        assertFalse(logicObj.evaluateBankerDraw(dealer));
+        assertFalse(logicObj.evaluateBankerDraw(dealer), "Dealer shouldn't draw with hand of 17");
         dealer.add(new Card("Diamonds", 5));
-        assertFalse(logicObj.evaluateBankerDraw(dealer));
+        assertFalse(logicObj.evaluateBankerDraw(dealer), "Dealer shouldn't draw with hand of 22");
 
     }
 
@@ -206,7 +204,7 @@ public class BlackjackTest {
 
         dealer.generateDeck();
 
-        assertEquals(52, dealer.deckSize());
+        assertEquals(52, dealer.deckSize(), "Deck size for new deck is not incorrect");
 
         Map<String, Integer> suitCount = new HashMap<>();
         suitCount.put("Diamonds", 0);
@@ -219,6 +217,7 @@ public class BlackjackTest {
             faceCount.put(i, 0);
         }
 
+        // empty the deck and counts the frequency of each suit and value
         while (dealer.deckSize() != 0){
 
             Card drewCard = dealer.drawOne();
@@ -228,15 +227,15 @@ public class BlackjackTest {
 
         }
 
-        assertEquals(0, dealer.deckSize());
+        assertEquals(0, dealer.deckSize(), "The deck size is not 0 after being emptied");
 
-        assertEquals(13, suitCount.get("Diamonds"));
-        assertEquals(13, suitCount.get("Clubs"));
-        assertEquals(13, suitCount.get("Hearts"));
-        assertEquals(13, suitCount.get("Spades"));
+        assertEquals(13, suitCount.get("Diamonds"), "Incorrect number of Diamonds were seen");
+        assertEquals(13, suitCount.get("Clubs"), "Incorrect number of Clubs were seen");
+        assertEquals(13, suitCount.get("Hearts"), "Incorrect number of Hearts were seen");
+        assertEquals(13, suitCount.get("Spades"), "Incorrect number of Spades were seen");
 
         for (int i = 1; i <= 13; i++){
-            assertEquals(4, faceCount.get(i));
+            assertEquals(4, faceCount.get(i), "Incorrect number of " + i + " cards were seen");
         }
 
     }
@@ -254,10 +253,10 @@ public class BlackjackTest {
         Card first = hand.get(0), second = hand.get(1);
 
         if (first.value == second.value){
-            assertNotEquals(first.suit, second.suit);
+            assertNotEquals(first.suit, second.suit, "Two duplicate cards were given");
         }
         else if (first.suit.equals(second.suit)){
-            assertNotEquals(first.value, second.value);
+            assertNotEquals(first.value, second.value, "Two duplicate cards were given");
         }
 
     }
@@ -273,10 +272,10 @@ public class BlackjackTest {
             dealer.drawOne();
         }
 
-        assertEquals(42, dealer.deckSize());
+        assertEquals(42, dealer.deckSize(), "Deck size is not correct after drawing 8 cards");
 
         dealer.shuffleDeck();
-        assertEquals(52, dealer.deckSize());
+        assertEquals(52, dealer.deckSize(), "Deck does not contain 52 cards after reshuffling");
 
     }
 
@@ -291,53 +290,42 @@ public class BlackjackTest {
         game.playerHand.add(new Card("Clubs", 10));
         game.bankerHand.add(new Card("Clubs", 10));
 
-        assertEquals(0.0, game.evaluateWinnings()); // both sides tied when < 21
+        assertEquals(0.0, game.evaluateWinnings(), "Incorrect winnings calculated when tied");
 
         game.playerHand.add(new Card("Clubs", 2));
 
-        assertEquals(100.0, game.evaluateWinnings()); // when the player has a higher hand
+        assertEquals(100.0, game.evaluateWinnings(), "Incorrect winnings calculated when the player wins");
 
         game.bankerHand.add(new Card("Clubs", 3));
-        assertEquals(-100.0, game.evaluateWinnings()); // when the dealer has a higher hand
+        assertEquals(-100.0, game.evaluateWinnings(), "Incorrect winnings calculated when the player loses");
 
         game.playerHand.add(new Card("Clubs", 9));
-        assertEquals(100.0, game.evaluateWinnings()); // when the player hits blackjack
+        assertEquals(100.0, game.evaluateWinnings(), "Incorrect winnings calculated when the player hits 21");
 
         game.bankerHand.add(new Card("Clubs", 8));
-        assertEquals(0, game.evaluateWinnings()); // when both sides hits blackjacks
+        assertEquals(0, game.evaluateWinnings(), "Incorrect winnings calculated when both sides hit 21");
 
         game.playerHand = new ArrayList<>();
         game.bankerHand = new ArrayList<>();
 
-
         game.playerHand.add(new Card("Spades", 1));
         game.playerHand.add(new Card("Spades", 11));
         game.bankerHand.add(new Card("Spades", 5));
+        assertEquals(150.0, game.evaluateWinnings(), "Incorrect winnings when the player hits blackjack");
 
-        assertEquals(150.0, game.evaluateWinnings()); // when the player hits blackjack with Ace and a 10
+        game.bankerHand = new ArrayList<>();
+        game.bankerHand.add(new Card("Clubs", 12));
+        game.bankerHand.add(new Card("Clubs", 1));
 
-        game.playerHand = new ArrayList<>();
-        game.playerHand.add(new Card("Spades", 10));
-        game.playerHand.add(new Card("Spades", 12));
-        game.playerHand.add(new Card("Spades", 11));
-
-        assertEquals(-100.0, game.evaluateWinnings()); // when the player busts
+        assertEquals(0, game.evaluateWinnings(), "Incorrect winnings when both sides hit blackjack");
 
         game.playerHand = new ArrayList<>();
-        game.playerHand.add(new Card("Spades", 10));
-        game.playerHand.add(new Card("Spades", 12));
-        game.bankerHand.add(new Card("Spades", 10));
-        game.bankerHand.add(new Card("Spades", 10));
 
-        assertEquals(100.0, game.evaluateWinnings()); //when the dealer busts
-
-        game.playerHand.add(new Card("Spades", 4));
-
-        assertEquals(-100.0, game.evaluateWinnings()); // when both sides busts
+        assertEquals(-100, game.evaluateWinnings(), "Incorrect winnings when the player loses to blackjack");
 
         game.currentBet = 1000.0;
 
-        assertEquals(-1000.0, game.evaluateWinnings()); // when the bet amount changes
+        assertEquals(-1000.0, game.evaluateWinnings(), "Incorrect winnings calculated when the bet changes");
     }
 
 
