@@ -1,3 +1,7 @@
+// BlackjackGame.java
+// Written by Jason Liang
+// Defines the BlackjackGame class
+
 import java.util.ArrayList;
 
 public class BlackjackGame {
@@ -11,11 +15,13 @@ public class BlackjackGame {
     double currentBet;
     double totalWinnings;
 
+    // constructor
     public BlackjackGame(){
         theDealer = new BlackjackDealer();
         gameLogic = new BlackjackGameLogic();
     }
 
+    // method calculates the winnings for a given round based on the bet
     public double evaluateWinnings(){
         double winnings;
 
@@ -29,7 +35,7 @@ public class BlackjackGame {
             winnings = currentBet;
 
             if (playerHand.size() == 2 && gameLogic.handTotal(playerHand) == 21){
-                winnings *= 1.5;
+                winnings *= 1.5; // 150% of bet if player hit blackjack
             }
 
         }

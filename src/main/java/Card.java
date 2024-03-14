@@ -1,3 +1,7 @@
+// Card.java
+// Written by Jason Liang
+// Defines the Card class
+
 public class Card {
 
     String suit;
