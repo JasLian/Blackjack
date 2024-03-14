@@ -40,6 +40,8 @@ public class Main extends Application{
 
     EventHandler<ActionEvent> returnToHome;
 
+    PauseTransition roundOverPause = new PauseTransition(Duration.seconds(5));
+
     HashMap<String, Scene> sceneMap = new HashMap<>();
     HashMap<String, String> resultMsg = new HashMap<>();
 
@@ -68,23 +70,33 @@ public class Main extends Application{
         picWidth = (int) (windowWidth / 8.0);
         picHeight = (int) (windowHeight / 4.0);
 
-        System.out.println(windowWidth + " " + windowHeight);
-
         game = new BlackjackGame();
 
         resultMsg.put("player", "You Won!");
         resultMsg.put("dealer", "You Lost...");
         resultMsg.put("push", "Drawn");
 
+        roundOverPause.setOnFinished(e->{
+            System.out.println("round");
+            if (game.totalWinnings <= 0.0){
+                mainStage.setScene(sceneMap.get("lose"));
+            }
+            else{
+                mainStage.setScene(sceneMap.get("end"));
+            }
+        });
+
         returnToHome = e -> {
             mainStage.setScene(sceneMap.get("start"));
         };
+
 
         sceneMap.put("start", createStartScene());
         sceneMap.put("setup", createSetupScene());
         sceneMap.put("rules", createRulesScene());
         sceneMap.put("play", createPlayScene());
         sceneMap.put("end", createEndScene());
+        sceneMap.put("lose", createLoseScene());
 
         startBtn.setOnAction(e ->{
             mainStage.setScene(sceneMap.get("setup"));
@@ -130,20 +142,14 @@ public class Main extends Application{
         hitBtn.setOnAction(e->{
 
             Card newCard = game.theDealer.drawOne();
-            String cardName = newCard.value + "_" + newCard.suit + ".png";
-
-            Image newImage = new Image(cardName);
-            ImageView viewImage = new ImageView(newImage);
-            viewImage.setFitHeight(picHeight);
-            viewImage.setFitWidth(picWidth);
 
             game.playerHand.add(newCard);
-            playerSide.getChildren().add(viewImage);
+            playerSide.getChildren().add(makeNewCardImage(newCard));
 
             if (determineBust(game.playerHand)){
                 endRound();
 
-                if (game.totalWinnings < 0.0){
+                if (game.totalWinnings <= 0.0){
                     mainStage.setScene(sceneMap.get("lose"));
                 }
                 else{
@@ -156,22 +162,19 @@ public class Main extends Application{
 
         stayBtn.setOnAction(e->{
 
+            dealerSide.getChildren().remove(1);
+            dealerSide.getChildren().add(makeNewCardImage(game.bankerHand.get(1)));
+
             boolean bust = determineBust(game.bankerHand);
             while (game.gameLogic.evaluateBankerDraw(game.bankerHand) && !bust){
+
                 Card newCard = game.theDealer.drawOne();
                 game.bankerHand.add(newCard);
                 dealerSide.getChildren().add(makeNewCardImage(newCard));
             }
 
             endRound();
-
-            if (game.totalWinnings < 0.0){
-                mainStage.setScene(sceneMap.get("lose"));
-            }
-            else{
-                mainStage.setScene(sceneMap.get("end"));
-            }
-
+            roundOverPause.play();
         });
 
         startRoundBtn2.setOnAction(e->{
@@ -440,6 +443,36 @@ public class Main extends Application{
         BorderPane pane = new BorderPane();
         pane.setCenter(container);
         pane.setPadding(new Insets(0, windowWidth / 7.5, 0, windowWidth / 7.5));
+        pane.setBackground(bg);
+        pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 25;");
+
+        return new Scene(pane, windowWidth, windowHeight);
+    }
+
+    private Scene createLoseScene(){
+
+        Text loseTitle = new Text("YOU'VE LOST YOUR ENTIRE BALANCE");
+        loseTitle.setStyle("-fx-font-size: 40");
+
+        Text msg = new Text("To keep playing, return to the start");
+        msg.setStyle("-fx-font-size: 30");
+
+        Button endGame = new Button("Home");
+        endGame.setOnAction(returnToHome);
+        endGame.setMinSize(windowWidth / 10, windowHeight / 20);
+        endGame.setMaxSize(windowWidth / 10, windowHeight / 20);
+        endGame.setBackground(btnBg);
+        endGame.setBorder(btnBorder);
+
+        VBox v1 = new VBox(windowHeight / 50, msg, endGame);
+        v1.setAlignment(Pos.CENTER);
+
+        VBox v2 = new VBox(windowHeight / 10, loseTitle, v1);
+        v2.setAlignment(Pos.CENTER);
+
+        BorderPane pane = new BorderPane();
+        pane.setCenter(v2);
+        pane.setPadding(new Insets(0, 0, 0, 0));
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman';" + "-fx-font-size: 25;");
 
