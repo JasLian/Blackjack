@@ -1,3 +1,5 @@
+// Card image files sourced from Google Code Archive https://code.google.com/archive/p/vector-playing-cards/
+
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -51,8 +53,6 @@ public class Main extends Application{
     private static int picHeight;
     private static int picWidth;
 
-    String winner;
-
     public static void main(String[] args){
         launch(args);
     }
@@ -77,7 +77,6 @@ public class Main extends Application{
         resultMsg.put("push", "Drawn");
 
         roundOverPause.setOnFinished(e->{
-            System.out.println("round");
             if (game.totalWinnings <= 0.0){
                 mainStage.setScene(sceneMap.get("lose"));
             }
@@ -144,18 +143,12 @@ public class Main extends Application{
             Card newCard = game.theDealer.drawOne();
 
             game.playerHand.add(newCard);
-            playerSide.getChildren().add(makeNewCardImage(newCard));
+            addNewCardImage(newCard, playerSide);
 
             if (determineBust(game.playerHand)){
                 endRound();
 
-                if (game.totalWinnings <= 0.0){
-                    mainStage.setScene(sceneMap.get("lose"));
-                }
-                else{
-                    mainStage.setScene(sceneMap.get("end"));
-                }
-
+                roundOverPause.play();
             }
 
         });
@@ -163,14 +156,13 @@ public class Main extends Application{
         stayBtn.setOnAction(e->{
 
             dealerSide.getChildren().remove(1);
-            dealerSide.getChildren().add(makeNewCardImage(game.bankerHand.get(1)));
+            addNewCardImage(game.bankerHand.get(1), dealerSide);
 
             boolean bust = determineBust(game.bankerHand);
             while (game.gameLogic.evaluateBankerDraw(game.bankerHand) && !bust){
-
                 Card newCard = game.theDealer.drawOne();
                 game.bankerHand.add(newCard);
-                dealerSide.getChildren().add(makeNewCardImage(newCard));
+                addNewCardImage(newCard, dealerSide);
             }
 
             endRound();
@@ -217,14 +209,10 @@ public class Main extends Application{
         titleText.setStyle("-fx-font-size: 50;");
 
         startBtn = new Button("Start");
-        startBtn.setMinSize(windowWidth / 10, windowHeight / 20);
-        startBtn.setBackground(btnBg);
-        startBtn.setBorder(btnBorder);
+        styleButton(startBtn);
 
         rulesBtn = new Button("Rules");
-        rulesBtn.setMinSize(windowWidth / 10, windowHeight / 20);
-        rulesBtn.setBackground(btnBg);
-        rulesBtn.setBorder(btnBorder);
+        styleButton(rulesBtn);
 
         VBox v = new VBox(windowHeight / 24, titleText, startBtn, rulesBtn);
         v.setAlignment(Pos.CENTER);
@@ -255,14 +243,11 @@ public class Main extends Application{
         ruleText.setStyle("-fx-font-size: 30;");
         ruleText.setWrappingWidth(900);
 
-        Button rulesReturn = new Button("Return");
-        rulesReturn.setOnAction(returnToHome);
-        rulesReturn.setMinSize(windowWidth / 10, windowHeight / 20);
-        rulesReturn.setBackground(btnBg);
-        rulesReturn.setBorder(btnBorder);
-        rulesReturn.setStyle("-fx-font-size: 25;");
+        Button rulesReturnBtn = new Button("Return");
+        rulesReturnBtn.setOnAction(returnToHome);
+        styleButton(rulesReturnBtn);
 
-        VBox box = new VBox(windowHeight / 24, ruleTitle, ruleText, rulesReturn);
+        VBox box = new VBox(windowHeight / 24, ruleTitle, ruleText, rulesReturnBtn);
         box.maxWidth(50);
 
         BorderPane pane = new BorderPane();
@@ -310,28 +295,23 @@ public class Main extends Application{
         betInput.setBorder(inputBorder);
 
         startRoundBtn1 = new Button("Start Game");
-        startRoundBtn1.setMinSize(windowWidth / 10, windowHeight / 20);
-        startRoundBtn1.setBackground(btnBg);
-        startRoundBtn1.setBorder(btnBorder);
-        startRoundBtn1.setStyle("-fx-font-size: 25;");
+        styleButton(startRoundBtn1);
 
-        Button setUpReturn = new Button("Return");
-        setUpReturn.setOnAction(returnToHome);
-        setUpReturn.setMinSize(windowWidth / 10, windowHeight / 20);
-        setUpReturn.setBackground(btnBg);
-        setUpReturn.setBorder(btnBorder);
-        setUpReturn.setStyle("-fx-font-size: 25;");
+        Button setUpReturnBtn = new Button("Return");
+        setUpReturnBtn.setOnAction(returnToHome);
+        styleButton(setUpReturnBtn);
 
-        VBox v1 = new VBox(windowHeight / 60, balanceText, balanceInput);
-        VBox v2 = new VBox(windowHeight / 60, betText, betInput);
-        VBox v3 = new VBox(windowHeight / 24, v1, v2, startRoundBtn1, setUpReturn, errorMsg);
-        v1.setAlignment(Pos.valueOf("CENTER"));
-        v2.setAlignment(Pos.valueOf("CENTER"));
-        v3.setAlignment(Pos.valueOf("CENTER"));
+        VBox v1 = new VBox(windowHeight / 40, balanceText, balanceInput, betText, betInput);
+        VBox v2 = new VBox(windowHeight / 24, startRoundBtn1, setUpReturnBtn, errorMsg);
+
+        VBox v3 = new VBox(windowHeight / 20, v1, v2);
+        v1.setAlignment(Pos.CENTER);
+        v2.setAlignment(Pos.CENTER);
+        v3.setAlignment(Pos.CENTER);
+
 
         BorderPane pane = new BorderPane();
         pane.setCenter(v3);
-        pane.setPadding(new Insets(windowHeight / 6, windowWidth / 7.5, windowHeight / 2, windowWidth / 7.5));
         pane.setBackground(bg);
         pane.setStyle("-fx-font-family: 'Times New Roman'");
 
@@ -416,22 +396,16 @@ public class Main extends Application{
         newBalance = new Text();
 
         newBetInput = new TextField();
-        newBetInput.setMinSize(windowWidth / 3.75, windowHeight / 24);
-        newBetInput.setMaxSize(windowWidth / 3.75, windowHeight / 24);
+        newBetInput.setMinSize(windowWidth / 4.5, windowHeight / 24);
+        newBetInput.setMaxSize(windowWidth / 4.5, windowHeight / 24);
         newBetInput.setAlignment(Pos.CENTER);
 
         startRoundBtn2 = new Button("Continue");
-        startRoundBtn2.setMinSize(windowWidth / 10, windowHeight / 20);
-        startRoundBtn2.setMaxSize(windowWidth / 10, windowHeight / 20);
-        startRoundBtn2.setBackground(btnBg);
-        startRoundBtn2.setBorder(btnBorder);
+        styleButton(startRoundBtn2);
 
         Button endGame = new Button("Home");
         endGame.setOnAction(returnToHome);
-        endGame.setMinSize(windowWidth / 10, windowHeight / 20);
-        endGame.setMaxSize(windowWidth / 10, windowHeight / 20);
-        endGame.setBackground(btnBg);
-        endGame.setBorder(btnBorder);
+        styleButton(endGame);
 
         VBox textBox = new VBox(windowHeight / 60, continueMsg1, newBalance, continueMsg2, newBetInput);
         textBox.setAlignment(Pos.CENTER);
@@ -459,10 +433,7 @@ public class Main extends Application{
 
         Button endGame = new Button("Home");
         endGame.setOnAction(returnToHome);
-        endGame.setMinSize(windowWidth / 10, windowHeight / 20);
-        endGame.setMaxSize(windowWidth / 10, windowHeight / 20);
-        endGame.setBackground(btnBg);
-        endGame.setBorder(btnBorder);
+        styleButton(endGame);
 
         VBox v1 = new VBox(windowHeight / 50, msg, endGame);
         v1.setAlignment(Pos.CENTER);
@@ -479,14 +450,15 @@ public class Main extends Application{
         return new Scene(pane, windowWidth, windowHeight);
     }
 
-    private ImageView makeNewCardImage(Card newCard){
+    private void addNewCardImage(Card newCard, HBox side){
         String imageFile = newCard.value + "_" + newCard.suit + ".png";
         Image image = new Image(imageFile);
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(picHeight);
         imageView.setFitWidth(picWidth);
 
-        return imageView;
+        side.getChildren().add(imageView);
+
     }
 
     private void beginGame(){
@@ -499,7 +471,7 @@ public class Main extends Application{
         game.playerHand = game.theDealer.dealHand();
         game.bankerHand = game.theDealer.dealHand();
 
-        dealerSide.getChildren().add(makeNewCardImage(game.bankerHand.get(0)));
+        addNewCardImage(game.bankerHand.get(0), dealerSide);
 
         Image backImage = new Image("back.png");
         ImageView viewBackImage = new ImageView(backImage);
@@ -509,7 +481,7 @@ public class Main extends Application{
         dealerSide.getChildren().add(viewBackImage);
 
         for (Card card : game.playerHand){
-            playerSide.getChildren().add(makeNewCardImage(card));
+            addNewCardImage(card, playerSide);
         }
 
     }
@@ -522,14 +494,22 @@ public class Main extends Application{
 
         double winnings = game.evaluateWinnings();
 
-        if (winnings > 0.0){
+        if (winnings >= 0.0){
             game.totalWinnings += winnings + game.currentBet;
         }
 
         newBalance.setText("Current Balance: " + game.totalWinnings);
 
-        winner = game.gameLogic.whoWon(game.playerHand, game.bankerHand);
+        String winner = game.gameLogic.whoWon(game.playerHand, game.bankerHand);
         result.setText(resultMsg.get(winner));
 
+    }
+
+    private void styleButton(Button btn){
+        btn.setMinSize(windowWidth / 10, windowHeight / 20);
+        btn.setMaxSize(windowWidth / 8, windowHeight / 10);
+        btn.setBackground(btnBg);
+        btn.setBorder(btnBorder);
+        btn.setStyle("-fx-font-size: 25");
     }
 }
