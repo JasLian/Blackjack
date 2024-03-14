@@ -88,6 +88,42 @@ public class BlackjackTest {
     }
 
     @Test
+    public void test_HandsWithAces(){
+
+        BlackjackGameLogic logicObj = new BlackjackGameLogic();
+
+        ArrayList<Card> hand = new ArrayList<>();
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(11, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(12, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(13, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 10));
+        assertEquals(13, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(14, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 5));
+        assertEquals(19, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(20, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(21, logicObj.handTotal(hand));
+
+        hand.add(new Card("Diamonds", 1));
+        assertEquals(22, logicObj.handTotal(hand));
+
+    }
+
+    @Test
     public void test_evaluateBankerDraw(){
         ArrayList<Card> dealer = new ArrayList<>();
         BlackjackGameLogic logicObj = new BlackjackGameLogic();
